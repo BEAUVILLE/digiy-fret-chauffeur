@@ -64,7 +64,6 @@
       background:#fff;
       font-size:15px;
     }
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .btn{
       width:100%;
       margin-top:12px;
@@ -164,19 +163,17 @@
   </div>
 
 <script>
-/* 🔐 SUPABASE — DÉJÀ POSÉ */
-    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+/* 🔐 SUPABASE */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.__supabase ||= window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.__supabase;
 
-/* ROUTING */
-const ROUTES = {
-  APP: "./index.html",
-  BACK: "./index.html"
-};
+/* ROUTES */
+const ROUTES = { APP: "./index.html", BACK: "./index.html" };
 
+/* UI */
 const $ = (id)=>document.getElementById(id);
 const statusEl = $("status");
 
@@ -189,20 +186,19 @@ function hideStatus(){ statusEl.classList.add("hide"); }
 
 function normalizePhone(p){
   let s = (p||"").trim();
-  // petit confort: si l’utilisateur met 77xxxxxxx sans +221, on corrige en +221
-  if(/^\d{9}$/.test(s)) s = "+221" + s;
-  if(/^0\d+/.test(s)) {
-    // ex: 077... -> enlève le 0 et met +221 (Sénégal)
-    s = "+221" + s.replace(/^0+/, "");
-  }
-  // s doit commencer par +
+  s = s.replace(/[^\d+]/g,"");            // enlève espaces/tirets
+  if(/^\d{9}$/.test(s)) s = "+221" + s;   // 771234567 -> +221...
+  if(/^0\d{8,}$/.test(s)) s = "+221" + s.replace(/^0+/, ""); // 077... -> +221...
+  if(/^\d{11,15}$/.test(s) && !s.startsWith("+")) s = "+" + s; // 221... -> +221...
   if(!s.startsWith("+")) return "";
   return s;
 }
 
+/* FLOW */
 async function checkAlready(){
-  const { data } = await supabase.auth.getSession();
+  const { data } = await sb.auth.getSession();
   const session = data?.session;
+
   if(session){
     const u = session.user;
     $("loginBox").classList.add("hide");
@@ -215,20 +211,18 @@ async function checkAlready(){
 }
 
 $("btnBack").addEventListener("click", ()=> location.href = ROUTES.BACK);
-
 $("btnGoApp").addEventListener("click", ()=> location.href = ROUTES.APP);
 
 $("btnLogout").addEventListener("click", async ()=>{
   hideStatus();
-  try{ await supabase.auth.signOut(); }catch(e){}
+  try{ await sb.auth.signOut(); }catch(e){}
   showStatus("Déconnecté ✅", "ok");
   setTimeout(()=>location.reload(), 350);
 });
 
 $("btnSend").addEventListener("click", async ()=>{
   hideStatus();
-  const raw = $("phone").value;
-  const phone = normalizePhone(raw);
+  const phone = normalizePhone($("phone").value);
 
   if(!phone){
     showStatus("Numéro invalide. Exemple: +221771234567", "bad");
@@ -239,7 +233,7 @@ $("btnSend").addEventListener("click", async ()=>{
   $("btnSend").textContent = "Envoi…";
 
   try{
-    const { error } = await supabase.auth.signInWithOtp({ phone });
+    const { error } = await sb.auth.signInWithOtp({ phone });
     if(error) throw error;
 
     showStatus("Code envoyé ✅ Regarde tes SMS.", "ok");
@@ -269,11 +263,7 @@ $("btnVerify").addEventListener("click", async ()=>{
   $("btnVerify").textContent = "Vérification…";
 
   try{
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: "sms"
-    });
+    const { error } = await sb.auth.verifyOtp({ phone, token, type: "sms" });
     if(error) throw error;
 
     showStatus("Connecté ✅ On t’ouvre le dashboard…", "ok");
