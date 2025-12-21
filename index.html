@@ -148,14 +148,14 @@
 </div>
 
 <script>
-/* 🔐 SUPABASE — DÉJÀ POSÉ */
+/* 🔐 SUPABASE */
 const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-window.__supabase = window.__supabase || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const supabase = window.__supabase;
-
+/* ✅ Client unique, jamais redeclaré */
+window.__supabase ||= window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.__supabase;
 
 /* ROUTES */
 const ROUTES = { LOGIN: "./login.html" };
@@ -179,23 +179,19 @@ function fmtDate(iso){
     return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
   }catch(e){ return "—"; }
 }
-
 function normalizePhoneDisplay(phone){
   if(!phone) return "—";
-  let p = String(phone).trim();
-  p = p.replace(/[^\d+]/g, "");
+  let p = String(phone).trim().replace(/[^\d+]/g, "");
   if (/^\d{11,15}$/.test(p) && !p.startsWith("+")) p = "+" + p;
   if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
   return p;
 }
-
 function setConn(ok,label){
   const dot = $("dotConn");
   dot.classList.remove("ok","bad");
   dot.classList.add(ok ? "ok":"bad");
   $("connLabel").textContent = label;
 }
-
 function setDispoUI(isOn){
   dispo = !!isOn;
   const dot = $("dotDispo");
@@ -212,7 +208,6 @@ function demoJobs(){
     { id:"FRET-002", status:"accepted", pickup:"Saly", dropoff:"Ngaparou", cargo:"Boissons", volume:"L", price_xof:6500, created_at:new Date(Date.now()-45*60000).toISOString() }
   ];
 }
-
 function statusLabel(s){
   const v = (s||"").toLowerCase();
   if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
@@ -222,7 +217,6 @@ function statusLabel(s){
   if(v==="cancelled") return ["ANNULÉE","#fff1f2"];
   return [String(s||"—").toUpperCase(),"#f1f5f9"];
 }
-
 function jobCard(j){
   const [st,bg] = statusLabel(j.status);
   const id = j.id || "—";
@@ -245,7 +239,6 @@ function jobCard(j){
     </div>
   `;
 }
-
 function renderJobs(list){
   jobsEl.innerHTML = "";
   emptyNotice.style.display = list.length ? "none" : "block";
@@ -255,7 +248,7 @@ function renderJobs(list){
 /* DB ops */
 async function safeTableCheck(){
   try{
-    const { error } = await supabase.from("fret_jobs").select("id").limit(1);
+    const { error } = await sb.from("fret_jobs").select("id").limit(1);
     if(error) throw error;
     return true;
   }catch(e){
@@ -267,7 +260,7 @@ async function loadDriverDispo(){
   try{
     if(!currentUser) return;
     const uid = currentUser.id;
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("fret_drivers")
       .select("is_available, rating, last_seen_at, phone")
       .eq("auth_user_id", uid)
@@ -293,7 +286,7 @@ async function saveDriverDispo(){
       is_available: dispo,
       last_seen_at: new Date().toISOString()
     };
-    const { error } = await supabase.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
+    const { error } = await sb.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
     if(error) throw error;
   }catch(e){}
 }
@@ -317,7 +310,7 @@ async function loadJobs(){
 
     let data = [];
     try{
-      const res = await supabase
+      const res = await sb
         .from("fret_jobs")
         .select("*")
         .or(`driver_id.eq.${uid},driver_phone.eq.${phone}`)
@@ -326,7 +319,7 @@ async function loadJobs(){
       if(res.error) throw res.error;
       data = res.data || [];
     }catch(e1){
-      const res2 = await supabase
+      const res2 = await sb
         .from("fret_jobs")
         .select("*")
         .eq("driver_phone", phone)
@@ -362,7 +355,7 @@ async function updateJobStatus(jobId, newStatus){
     return;
   }
   try{
-    const { error } = await supabase.from("fret_jobs").update({ status:newStatus }).eq("id", jobId);
+    const { error } = await sb.from("fret_jobs").update({ status:newStatus }).eq("id", jobId);
     if(error) throw error;
     log("Statut mis à jour : " + newStatus.toUpperCase() + " ✅");
     await loadJobs();
@@ -373,7 +366,7 @@ async function updateJobStatus(jobId, newStatus){
 
 /* GUARD */
 async function guard(){
-  const { data } = await supabase.auth.getSession();
+  const { data } = await sb.auth.getSession();
   const session = data?.session;
 
   if(!session){
@@ -405,7 +398,7 @@ $("btnToggleDispo").addEventListener("click", async ()=>{
 });
 
 $("btnLogout").addEventListener("click", async ()=>{
-  try{ await supabase.auth.signOut(); }catch(e){}
+  try{ await sb.auth.signOut(); }catch(e){}
   location.href = ROUTES.LOGIN;
 });
 
@@ -432,4 +425,5 @@ guard();
 </script>
 </body>
 </html>
+
 
