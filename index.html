@@ -149,21 +149,18 @@
 
 <script>
 /* 🔐 SUPABASE — DÉJÀ POSÉ */
-    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ROUTES */
-const ROUTES = {
-  LOGIN: "./login.html"
-};
+const ROUTES = { LOGIN: "./login.html" };
 
 /* STATE */
 let currentUser = null;
-driverPhone = currentUser.phone || currentUser.user_metadata?.phone || "—";
-if (driverPhone && /^\d{11,15}$/.test(driverPhone)) driverPhone = "+" + driverPhone;
+let driverPhone = "—";
 let dispo = true;
 
 /* UI */
@@ -181,12 +178,22 @@ function fmtDate(iso){
   }catch(e){ return "—"; }
 }
 
+function normalizePhoneDisplay(phone){
+  if(!phone) return "—";
+  let p = String(phone).trim();
+  p = p.replace(/[^\d+]/g, "");
+  if (/^\d{11,15}$/.test(p) && !p.startsWith("+")) p = "+" + p;
+  if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
+  return p;
+}
+
 function setConn(ok,label){
   const dot = $("dotConn");
   dot.classList.remove("ok","bad");
   dot.classList.add(ok ? "ok":"bad");
   $("connLabel").textContent = label;
 }
+
 function setDispoUI(isOn){
   dispo = !!isOn;
   const dot = $("dotDispo");
@@ -203,14 +210,17 @@ function demoJobs(){
     { id:"FRET-002", status:"accepted", pickup:"Saly", dropoff:"Ngaparou", cargo:"Boissons", volume:"L", price_xof:6500, created_at:new Date(Date.now()-45*60000).toISOString() }
   ];
 }
+
 function statusLabel(s){
   const v = (s||"").toLowerCase();
   if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
   if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
   if(v==="in_progress") return ["EN COURS","#fff7ed"];
   if(v==="done") return ["LIVRÉE","#dcfce7"];
+  if(v==="cancelled") return ["ANNULÉE","#fff1f2"];
   return [String(s||"—").toUpperCase(),"#f1f5f9"];
 }
+
 function jobCard(j){
   const [st,bg] = statusLabel(j.status);
   const id = j.id || "—";
@@ -233,6 +243,7 @@ function jobCard(j){
     </div>
   `;
 }
+
 function renderJobs(list){
   jobsEl.innerHTML = "";
   emptyNotice.style.display = list.length ? "none" : "block";
@@ -256,12 +267,15 @@ async function loadDriverDispo(){
     const uid = currentUser.id;
     const { data, error } = await supabase
       .from("fret_drivers")
-      .select("is_available, rating, last_seen_at")
+      .select("is_available, rating, last_seen_at, phone")
       .eq("auth_user_id", uid)
       .maybeSingle();
     if(error) throw error;
 
-    if(data && typeof data.is_available === "boolean") setDispoUI(data.is_available);
+    if(data?.phone) driverPhone = normalizePhoneDisplay(data.phone);
+    $("phoneLabel").textContent = "📱 " + driverPhone;
+
+    if(typeof data?.is_available === "boolean") setDispoUI(data.is_available);
     $("kpiRating").textContent = (data?.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
     $("kpiLast").textContent = data?.last_seen_at ? fmtDate(data.last_seen_at) : "—";
   }catch(e){}
@@ -271,7 +285,12 @@ async function saveDriverDispo(){
   try{
     if(!currentUser) return;
     const uid = currentUser.id;
-    const payload = { auth_user_id: uid, phone: driverPhone, is_available: dispo, last_seen_at: new Date().toISOString() };
+    const payload = {
+      auth_user_id: uid,
+      phone: driverPhone,
+      is_available: dispo,
+      last_seen_at: new Date().toISOString()
+    };
     const { error } = await supabase.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
     if(error) throw error;
   }catch(e){}
@@ -282,7 +301,6 @@ async function loadJobs(){
   const ok = await safeTableCheck();
 
   if(!ok){
-    // fallback demo si tables pas posées
     const list = demoJobs();
     renderJobs(list);
     $("kpiToday").textContent = money(0);
@@ -296,7 +314,6 @@ async function loadJobs(){
     const phone = driverPhone;
 
     let data = [];
-    // filtre souple
     try{
       const res = await supabase
         .from("fret_jobs")
@@ -319,7 +336,6 @@ async function loadJobs(){
 
     renderJobs(data);
 
-    // KPIs simples
     const start7 = Date.now() - 7*24*3600*1000;
     const weekCount = data.filter(j => new Date(j.created_at).getTime() >= start7).length;
     $("kpiWeek").textContent = String(weekCount);
@@ -359,14 +375,16 @@ async function guard(){
   const session = data?.session;
 
   if(!session){
-    // pas connecté => login
     location.href = ROUTES.LOGIN;
     return;
   }
 
   currentUser = session.user;
-  driverPhone = currentUser.phone || currentUser.user_metadata?.phone || "—";
-  $("phoneLabel").textContent = "📱 " + (driverPhone || "—");
+
+  driverPhone = normalizePhoneDisplay(
+    currentUser.phone || currentUser.user_metadata?.phone
+  );
+  $("phoneLabel").textContent = "📱 " + driverPhone;
 
   setConn(true, "Connecté");
   setDispoUI(true);
@@ -402,9 +420,8 @@ $("jobs").addEventListener("click", async (e)=>{
   if(act==="start") return updateJobStatus(jobId,"in_progress");
   if(act==="done") return updateJobStatus(jobId,"done");
   if(act==="signal"){
-    const r = prompt("Explique vite fait (signalement) :") || "";
+    prompt("Explique vite fait (signalement) :");
     log("Signalement envoyé ✅");
-    return;
   }
 });
 
@@ -413,3 +430,4 @@ guard();
 </script>
 </body>
 </html>
+
