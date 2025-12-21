@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DIGIY FRET — Login OTP</title>
+  <meta name="theme-color" content="#0ea5e9" />
+  <meta name="description" content="Connexion DIGIY FRET Chauffeur — OTP téléphone (Supabase)." />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg1:#f7fbff;--bg2:#fff7ed;--card:#ffffff;
+      --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.10);
+      --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
+      --radius:18px;--shadow:0 12px 28px rgba(0,0,0,.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.22), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.18), transparent 55%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .card{
+      width:100%;
+      max-width:520px;
+      background:rgba(255,255,255,.86);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+    .hd{
+      padding:18px 18px 12px;
+      border-bottom:1px solid rgba(0,0,0,.08);
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+    }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:48px;height:48px;border-radius:16px;
+      background:linear-gradient(135deg,var(--sky),var(--gold));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900;
+    }
+    h1{margin:0;font-size:15px;line-height:1.2}
+    small{color:var(--muted);font-weight:650}
+    .bd{padding:16px 18px 18px}
+    label{display:block;font-weight:850;font-size:13px;margin:10px 0 6px}
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      font-weight:800;
+      background:#fff;
+      font-size:15px;
+    }
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{
+      width:100%;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn.primary{
+      border-color: rgba(14,165,233,.30);
+      background: linear-gradient(135deg, rgba(14,165,233,.20), rgba(255,255,255,.85));
+    }
+    .btn.gold{
+      border-color: rgba(245,158,11,.30);
+      background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(255,255,255,.90));
+    }
+    .note{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(0,0,0,.18);
+      background:rgba(248,250,252,.8);
+      color:var(--muted);
+      font-weight:700;
+      font-size:13px;
+    }
+    .status{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:850;
+      font-size:13px;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+    .status.ok{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.08)}
+    .status.bad{border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.06); color:#8a1010}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .mini{
+      padding:9px 10px;border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .mini:active,.btn:active{transform:translateY(1px)}
+    .hide{display:none !important;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="hd">
+      <div class="brand">
+        <div class="logo">📲</div>
+        <div>
+          <h1>DIGIY FRET — Chauffeur</h1>
+          <small>Connexion OTP téléphone (Supabase)</small>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="mini" id="btnBack">← Retour</button>
+        <button class="mini" id="btnLogout">Déco</button>
+      </div>
+    </div>
+
+    <div class="bd">
+      <div id="alreadyBox" class="note hide">
+        Tu es déjà connecté ✅<br>
+        <span class="mono" id="who"></span><br>
+        <button class="btn gold" id="btnGoApp">Aller au dashboard</button>
+      </div>
+
+      <div id="loginBox">
+        <label for="phone">Téléphone (format international)</label>
+        <input id="phone" type="tel" inputmode="tel" placeholder="+22177xxxxxxx" autocomplete="tel" />
+
+        <button class="btn primary" id="btnSend">📩 Envoyer le code OTP</button>
+
+        <div id="otpBox" class="hide">
+          <label for="otp">Code reçu</label>
+          <input id="otp" type="text" inputmode="numeric" placeholder="Ex: 123456" autocomplete="one-time-code" />
+          <button class="btn gold" id="btnVerify">✅ Vérifier & entrer</button>
+        </div>
+
+        <div class="note">
+          Astuce terrain : écris toujours le numéro en <b>+221…</b> (ou ton indicatif complet).
+          <br>Si ça ne reçoit pas : vérifie Supabase → <b>Auth → Phone</b> + provider SMS.
+        </div>
+
+        <div id="status" class="status hide"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ✅ SUPABASE — DÉJÀ POSÉ */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.8D0bqM8z0y7w0oF4vPpV7cXWlS9G3S0gJrWl8Qm0abc";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ROUTING */
+const ROUTES = {
+  APP: "./index.html",
+  BACK: "./index.html"
+};
+
+const $ = (id)=>document.getElementById(id);
+const statusEl = $("status");
+
+function showStatus(msg, type="ok"){
+  statusEl.classList.remove("hide","ok","bad");
+  statusEl.classList.add(type === "bad" ? "bad" : "ok");
+  statusEl.textContent = msg;
+}
+function hideStatus(){ statusEl.classList.add("hide"); }
+
+function normalizePhone(p){
+  let s = (p||"").trim();
+  // petit confort: si l’utilisateur met 77xxxxxxx sans +221, on corrige en +221
+  if(/^\d{9}$/.test(s)) s = "+221" + s;
+  if(/^0\d+/.test(s)) {
+    // ex: 077... -> enlève le 0 et met +221 (Sénégal)
+    s = "+221" + s.replace(/^0+/, "");
+  }
+  // s doit commencer par +
+  if(!s.startsWith("+")) return "";
+  return s;
+}
+
+async function checkAlready(){
+  const { data } = await supabase.auth.getSession();
+  const session = data?.session;
+  if(session){
+    const u = session.user;
+    $("loginBox").classList.add("hide");
+    $("alreadyBox").classList.remove("hide");
+    $("who").textContent = (u.phone || u.email || u.id);
+  }else{
+    $("loginBox").classList.remove("hide");
+    $("alreadyBox").classList.add("hide");
+  }
+}
+
+$("btnBack").addEventListener("click", ()=> location.href = ROUTES.BACK);
+
+$("btnGoApp").addEventListener("click", ()=> location.href = ROUTES.APP);
+
+$("btnLogout").addEventListener("click", async ()=>{
+  hideStatus();
+  try{ await supabase.auth.signOut(); }catch(e){}
+  showStatus("Déconnecté ✅", "ok");
+  setTimeout(()=>location.reload(), 350);
+});
+
+$("btnSend").addEventListener("click", async ()=>{
+  hideStatus();
+  const raw = $("phone").value;
+  const phone = normalizePhone(raw);
+
+  if(!phone){
+    showStatus("Numéro invalide. Exemple: +221771234567", "bad");
+    return;
+  }
+
+  $("btnSend").disabled = true;
+  $("btnSend").textContent = "Envoi…";
+
+  try{
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    if(error) throw error;
+
+    showStatus("Code envoyé ✅ Regarde tes SMS.", "ok");
+    $("otpBox").classList.remove("hide");
+    $("otp").focus();
+  }catch(e){
+    showStatus("Erreur envoi OTP : " + (e?.message || "inconnue"), "bad");
+  }finally{
+    $("btnSend").disabled = false;
+    $("btnSend").textContent = "📩 Envoyer le code OTP";
+  }
+});
+
+$("btnVerify").addEventListener("click", async ()=>{
+  hideStatus();
+  const phone = normalizePhone($("phone").value);
+  const token = ($("otp").value||"").trim();
+
+  if(!phone){
+    showStatus("Numéro invalide.", "bad"); return;
+  }
+  if(!/^\d{4,8}$/.test(token)){
+    showStatus("Code invalide. (4 à 8 chiffres)", "bad"); return;
+  }
+
+  $("btnVerify").disabled = true;
+  $("btnVerify").textContent = "Vérification…";
+
+  try{
+    const { error } = await supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: "sms"
+    });
+    if(error) throw error;
+
+    showStatus("Connecté ✅ On t’ouvre le dashboard…", "ok");
+    setTimeout(()=> location.href = ROUTES.APP, 450);
+  }catch(e){
+    showStatus("Erreur OTP : " + (e?.message || "inconnue"), "bad");
+  }finally{
+    $("btnVerify").disabled = false;
+    $("btnVerify").textContent = "✅ Vérifier & entrer";
+  }
+});
+
+/* START */
+checkAlready();
+</script>
+</body>
+</html>
