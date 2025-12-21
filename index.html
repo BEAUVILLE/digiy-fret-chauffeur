@@ -162,7 +162,8 @@ const ROUTES = {
 
 /* STATE */
 let currentUser = null;
-let driverPhone = null;
+driverPhone = currentUser.phone || currentUser.user_metadata?.phone || "—";
+if (driverPhone && /^\d{11,15}$/.test(driverPhone)) driverPhone = "+" + driverPhone;
 let dispo = true;
 
 /* UI */
