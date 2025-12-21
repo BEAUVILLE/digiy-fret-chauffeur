@@ -7,708 +7,166 @@
   <meta name="theme-color" content="#0ea5e9" />
   <meta name="description" content="DIGIY FRET Chauffeur — missions, statut, encaissement. 0% commission." />
 
-  <!-- Supabase (CDN) -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
-      --bg1:#f7fbff;
-      --bg2:#fff7ed;
-      --card:#ffffff;
-      --text:#0b1220;
-      --muted:#5b6472;
-      --line:rgba(12, 18, 32, .10);
-      --shadow: 0 10px 25px rgba(2, 8, 23, .08);
-      --sky:#0ea5e9;
-      --sky2:#38bdf8;
-      --gold:#f59e0b;
-      --ok:#16a34a;
-      --bad:#dc2626;
-      --chip:#eef6ff;
-      --chip2:#fff3e6;
-      --radius:18px;
+      --bg1:#f7fbff;--bg2:#fff7ed;--card:#fff;
+      --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.08);
+      --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
+      --radius:18px;--shadow:0 10px 25px rgba(0,0,0,.08);
     }
-
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1100px 700px at 20% 10%, rgba(56,189,248,.25), transparent 55%),
-        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.22), transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
+      margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
     }
-
-    a{color:inherit; text-decoration:none}
-    .wrap{max-width:1100px; margin:0 auto; padding:18px 14px 40px}
+    .wrap{max-width:1100px;margin:auto;padding:16px}
     .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:14px 14px;
-      background:rgba(255,255,255,.70);
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      position: sticky; top: 10px; z-index: 5;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      background:#fff;border:1px solid var(--line);border-radius:18px;
+      padding:14px;box-shadow:var(--shadow)
     }
-    .brand{display:flex; align-items:center; gap:12px; min-width: 220px;}
+    .brand{display:flex;align-items:center;gap:12px}
     .logo{
-      width:44px; height:44px; border-radius:14px;
-      background:
-        radial-gradient(16px 16px at 30% 25%, rgba(255,255,255,.95), transparent 60%),
-        linear-gradient(135deg, var(--sky), var(--gold));
-      box-shadow: 0 10px 22px rgba(14,165,233,.18);
-      display:flex; align-items:center; justify-content:center;
-      font-weight:900; color:#061018;
+      width:44px;height:44px;border-radius:14px;
+      background:linear-gradient(135deg,var(--sky),var(--gold));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900
     }
-    .brand h1{margin:0; font-size:15px; line-height:1.15}
-    .brand small{display:block; margin-top:3px; color:var(--muted); font-weight:600}
-
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
     .btn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.80);
-      border-radius: 14px;
-      padding:10px 12px;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow: 0 6px 16px rgba(2,8,23,.06);
-      display:flex; align-items:center; gap:8px;
-      user-select:none;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid var(--line);background:#fff;
+      font-weight:800;cursor:pointer
     }
-    .btn:active{transform: translateY(1px)}
-    .btn.primary{
-      border-color: rgba(14,165,233,.30);
-      background: linear-gradient(135deg, rgba(14,165,233,.18), rgba(56,189,248,.12));
-    }
-    .btn.gold{
-      border-color: rgba(245,158,11,.30);
-      background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(255,255,255,.70));
-    }
-    .btn.danger{
-      border-color: rgba(220,38,38,.25);
-      background: linear-gradient(135deg, rgba(220,38,38,.10), rgba(255,255,255,.75));
-      color: #8a1010;
-    }
-
-    .grid{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:14px;
-    }
-    @media (max-width: 980px){
-      .grid{grid-template-columns: 1fr}
-      .brand{min-width: auto}
-      .actions{justify-content: flex-start}
-    }
-
+    .btn.primary{background:#e0f2fe;border-color:#7dd3fc}
+    .btn.gold{background:#fff7ed;border-color:#fed7aa}
+    .grid{margin-top:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
-      background: rgba(255,255,255,.78);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
+      background:#fff;border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow)
     }
-    .card .hd{
-      padding:14px 14px 10px;
-      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
-      border-bottom:1px solid rgba(12,18,32,.08);
-    }
-    .card .hd h2{margin:0; font-size:14px}
-    .card .hd p{margin:5px 0 0; color:var(--muted); font-weight:650; font-size:12px}
-    .card .bd{padding:14px}
-
-    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .hd{padding:14px;border-bottom:1px solid var(--line)}
+    .bd{padding:14px}
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:9px 10px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.75);
-      font-weight:850;
-      box-shadow: 0 6px 14px rgba(2,8,23,.05);
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      border:1px solid var(--line);font-weight:800
     }
-    .dot{width:10px;height:10px;border-radius:999px;background:var(--bad)}
-    .dot.ok{background: var(--ok)}
-    .dot.warn{background: var(--gold)}
-
-    .kv{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-top:12px;
-    }
-    @media (max-width: 520px){ .kv{grid-template-columns:1fr} }
-    .box{
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(255,255,255,.75);
-    }
-    .box b{display:block; font-size:12px}
-    .box span{display:block; margin-top:6px; color:var(--muted); font-weight:700}
-
-    .list{display:flex; flex-direction:column; gap:10px}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .ok{background:var(--ok)} .bad{background:var(--bad)}
     .job{
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(255,255,255,.82);
+      border:1px solid var(--line);border-radius:14px;
+      padding:12px;margin-bottom:10px
     }
-    .job-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
-    .job h3{margin:0; font-size:13px}
-    .job small{display:block; color:var(--muted); font-weight:700; margin-top:4px}
-    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .job h3{margin:0;font-size:14px}
     .chip{
-      padding:7px 10px;
-      border-radius: 999px;
-      font-weight:900;
-      border:1px solid rgba(14,165,233,.20);
-      background: var(--chip);
-      font-size:12px;
+      display:inline-block;padding:6px 10px;border-radius:999px;
+      background:#f1f5f9;font-weight:800;font-size:12px;margin:4px 4px 0 0
     }
-    .chip.gold{
-      border-color: rgba(245,158,11,.24);
-      background: var(--chip2);
-    }
-    .job-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
-    .mini{
-      padding:8px 10px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.80);
-      font-weight:900;
-      cursor:pointer;
-    }
-    .mini.primary{
-      border-color: rgba(14,165,233,.30);
-      background: linear-gradient(135deg, rgba(14,165,233,.18), rgba(255,255,255,.75));
-    }
-    .mini.ok{
-      border-color: rgba(22,163,74,.25);
-      background: linear-gradient(135deg, rgba(22,163,74,.12), rgba(255,255,255,.78));
-    }
-    .mini.bad{
-      border-color: rgba(220,38,38,.25);
-      background: linear-gradient(135deg, rgba(220,38,38,.10), rgba(255,255,255,.78));
-      color:#8a1010;
-    }
-
+    .actions button{margin-right:6px;margin-top:6px}
     .notice{
-      padding:10px 12px;
-      border:1px dashed rgba(12,18,32,.25);
-      border-radius: 16px;
-      background: rgba(255,255,255,.65);
-      color: var(--muted);
-      font-weight:700;
-      font-size:12px;
-      margin-top:10px;
+      margin-top:10px;padding:10px;border-radius:14px;
+      background:#f8fafc;border:1px dashed var(--line);
+      font-size:13px;color:var(--muted)
     }
-
-    .footer{
-      margin-top:14px;
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-      color: var(--muted);
-      font-weight:700;
-      font-size:12px;
-      opacity:.95;
-    }
-
-    .hide{display:none !important;}
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">🚚</div>
-        <div>
-          <h1>DIGIY FRET — Chauffeur</h1>
-          <small id="subline">0% commission • terrain first</small>
-        </div>
-      </div>
+<div class="wrap">
 
-      <div class="actions">
-        <button class="btn primary" id="btnRefresh">↻ Actualiser</button>
-        <button class="btn gold" id="btnToggleDispo">⚡ Disponible</button>
-        <button class="btn" id="btnOpenSupport">💬 Support</button>
-        <button class="btn danger" id="btnLogout">⟲ Déconnexion</button>
+  <!-- TOP -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🚚</div>
+      <div>
+        <b>DIGIY FRET — Chauffeur</b><br>
+        <small>0% commission • terrain first</small>
       </div>
     </div>
-
-    <div class="grid">
-      <!-- LEFT -->
-      <div class="card">
-        <div class="hd">
-          <div>
-            <h2>📦 Mes missions</h2>
-            <p>Missions attribuées à ton compte (ou mode démo si pas de table).</p>
-          </div>
-          <div class="pill" title="Connexion / mode démo">
-            <span class="dot" id="dotConn"></span>
-            <span id="connLabel">…</span>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="row">
-            <div class="pill" title="Ton statut">
-              <span class="dot warn" id="dotDispo"></span>
-              <span id="dispoLabel">Disponibilité : …</span>
-            </div>
-            <div class="pill" title="Ton téléphone">
-              <span>📱</span>
-              <span id="phoneLabel">—</span>
-            </div>
-          </div>
-
-          <div class="notice" id="demoNotice" style="display:none;">
-            Mode démo activé : si tes tables <b>fret_jobs</b> / <b>fret_drivers</b> n’existent pas encore, la page tourne quand même.
-          </div>
-
-          <div style="margin-top:12px" class="list" id="jobsList"></div>
-
-          <div class="notice" id="emptyNotice" style="display:none;">
-            Aucune mission pour l’instant. Reste dispo, ça va tomber. 🔥
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT -->
-      <div class="card">
-        <div class="hd">
-          <div>
-            <h2>🧾 Tableau chauffeur</h2>
-            <p>Infos rapides & encaissement.</p>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="kv">
-            <div class="box">
-              <b>Solde du jour</b>
-              <span id="kpiToday">—</span>
-            </div>
-            <div class="box">
-              <b>Missions (7 jours)</b>
-              <span id="kpiWeek">—</span>
-            </div>
-            <div class="box">
-              <b>Note / fiabilité</b>
-              <span id="kpiRating">—</span>
-            </div>
-            <div class="box">
-              <b>Dernière activité</b>
-              <span id="kpiLast">—</span>
-            </div>
-          </div>
-
-          <div style="margin-top:12px" class="row">
-            <button class="btn primary" id="btnCashIn">💰 Encaissement</button>
-            <button class="btn" id="btnProfile">👤 Mon profil</button>
-            <button class="btn" id="btnGoHub">🏠 Retour HUB</button>
-          </div>
-
-          <div class="notice" id="actionLog">Prêt. 🚀</div>
-
-          <div class="footer">
-            <span>∞ DIGIYLYFE</span>
-            <span id="clock">—</span>
-          </div>
-        </div>
-      </div>
+    <div>
+      <button class="btn primary" onclick="loadJobs()">↻ Actualiser</button>
+      <button class="btn gold" onclick="toggleDispo()">⚡ Dispo</button>
     </div>
   </div>
 
-<script>
-/* ✅ SUPABASE — DÉJÀ POSÉ (comme tu aimes) */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.8D0bqM8z0y7w0oF4vPpV7cXWlS9G3S0gJrWl8Qm0abc"; // <-- garde ta vraie clé ici si différente
+  <div class="grid">
 
+    <!-- MISSIONS -->
+    <div class="card">
+      <div class="hd">
+        <b>📦 Mes missions</b>
+        <div class="pill" style="float:right">
+          <span class="dot ok"></span> Mode démo
+        </div>
+      </div>
+      <div class="bd" id="jobs"></div>
+    </div>
+
+    <!-- INFOS -->
+    <div class="card">
+      <div class="hd"><b>🧾 Tableau chauffeur</b></div>
+      <div class="bd">
+        <div class="pill"><span class="dot ok"></span> Disponible</div>
+        <div class="notice" id="log">Prêt. 🚀</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* SUPABASE (branché mais non bloquant) */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY = "TA_CLE_ANON_ICI";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ✅ CONFIG SIMPLE */
-const ROUTES = {
-  LOGIN: "./login.html",           // si pas connecté => redirection ici
-  HUB: "../digiy-hub/index.html",   // adapte si besoin
-  SUPPORT: "../digiy-chat-pro/pro.html?chat=digiy-fret-support",
-  PROFILE: "./profil.html"
-};
-
-/* ✅ STATE */
-let currentUser = null;
-let driverPhone = null;
-let isDemoMode = false;
-let dispo = true; // local state (et sync DB si table existe)
-
-/* ✅ UI refs */
-const el = (id)=>document.getElementById(id);
-const jobsList = el("jobsList");
-const demoNotice = el("demoNotice");
-const emptyNotice = el("emptyNotice");
-const actionLog = el("actionLog");
-
-function log(msg){
-  actionLog.textContent = msg;
-}
-
-function setConn(ok, label){
-  const d = el("dotConn");
-  d.classList.toggle("ok", !!ok);
-  d.style.background = ok ? "var(--ok)" : "var(--bad)";
-  el("connLabel").textContent = label;
-}
-
-function setDispoUI(isOn){
-  dispo = !!isOn;
-  el("dotDispo").classList.remove("ok","warn");
-  el("dotDispo").classList.add(dispo ? "ok" : "warn");
-  el("dispoLabel").textContent = "Disponibilité : " + (dispo ? "DISPO ✅" : "PAUSE ⏸️");
-  el("btnToggleDispo").textContent = dispo ? "⚡ Disponible" : "⏸️ En pause";
-}
-
-/* ✅ DEMO DATA */
+/* MODE DÉMO — MISSIONS */
 function demoJobs(){
-  const now = new Date();
   return [
-    {
-      id: "DEMO-001",
-      status: "pending",
-      pickup: "Dakar — Plateau",
-      dropoff: "Pikine — Dalifort",
-      cargo: "Cartons (boutique)",
-      volume: "M",
-      price_xof: 4500,
-      created_at: now.toISOString()
-    },
-    {
-      id: "DEMO-002",
-      status: "accepted",
-      pickup: "Saly — Centre",
-      dropoff: "Ngaparou",
-      cargo: "Sac de riz + boissons",
-      volume: "L",
-      price_xof: 6500,
-      created_at: new Date(now.getTime()-1000*60*45).toISOString()
-    }
+    {id:"FRET-001",from:"Dakar Plateau",to:"Pikine",cargo:"Cartons boutique",vol:"M",price:4500},
+    {id:"FRET-002",from:"Saly",to:"Ngaparou",cargo:"Boissons",vol:"L",price:6500}
   ];
 }
 
-/* ✅ RENDER */
-function money(x){
-  const n = Number(x||0);
-  return n.toLocaleString("fr-FR") + " F CFA";
-}
-function fmtDate(iso){
-  try{
-    const d = new Date(iso);
-    return d.toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
-  }catch(e){ return "—"; }
-}
-function statusLabel(s){
-  const v = (s||"").toLowerCase();
-  if(v==="pending") return ["EN ATTENTE", "chip"];
-  if(v==="accepted") return ["ACCEPTÉE", "chip gold"];
-  if(v==="in_progress") return ["EN COURS", "chip gold"];
-  if(v==="done" || v==="completed") return ["LIVRÉE", "chip"];
-  if(v==="cancelled" || v==="canceled") return ["ANNULÉE", "chip"];
-  return [String(s||"—").toUpperCase(), "chip"];
-}
-
-function jobCard(j){
-  const [st, chipClass] = statusLabel(j.status);
-  const id = j.id || j.job_id || "—";
-  const price = money(j.price_xof ?? j.amount_xof ?? j.price ?? 0);
-
-  const pickup = j.pickup || j.pickup_address || j.from || "Point A";
-  const dropoff = j.dropoff || j.dropoff_address || j.to || "Point B";
-  const cargo = j.cargo || j.cargo_label || j.goods || "Marchandise";
-  const vol = j.volume || j.vol || "—";
-
-  const canAccept = (String(j.status).toLowerCase()==="pending");
-  const canStart  = (String(j.status).toLowerCase()==="accepted");
-  const canDone   = (String(j.status).toLowerCase()==="in_progress");
-
-  return `
-    <div class="job" data-id="${id}">
-      <div class="job-top">
-        <div>
-          <h3>🚚 Mission ${id}</h3>
-          <small>${fmtDate(j.created_at)} • ${cargo}</small>
-        </div>
-        <div class="${chipClass}">${st}</div>
-      </div>
-
-      <div class="chips">
-        <span class="chip">📍 ${pickup}</span>
-        <span class="chip">➡️ ${dropoff}</span>
-        <span class="chip gold">📦 Vol: ${vol}</span>
-        <span class="chip gold">💰 ${price}</span>
-      </div>
-
-      <div class="job-actions">
-        ${canAccept ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
-        ${canStart  ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
-        ${canDone   ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
-        ${(canAccept || canStart || canDone) ? `` : `<button class="mini" data-act="view">👀 Détails</button>`}
-        <button class="mini bad" data-act="cancel">✖ Signaler</button>
-      </div>
-    </div>
-  `;
-}
-
 function renderJobs(list){
-  jobsList.innerHTML = "";
-  emptyNotice.style.display = list.length ? "none" : "block";
-  list.forEach(j => jobsList.insertAdjacentHTML("beforeend", jobCard(j)));
+  const el=document.getElementById("jobs");
+  el.innerHTML="";
+  list.forEach(j=>{
+    el.innerHTML+=`
+      <div class="job">
+        <h3>🚚 ${j.id}</h3>
+        <div class="chip">📍 ${j.from} → ${j.to}</div>
+        <div class="chip">📦 ${j.cargo}</div>
+        <div class="chip">Vol ${j.vol}</div>
+        <div class="chip">💰 ${j.price} F CFA</div>
+        <div class="actions">
+          <button class="btn primary">Accepter</button>
+          <button class="btn">Livré</button>
+        </div>
+      </div>
+    `;
+  });
 }
 
-/* ✅ DB OPS (si tables existent) */
-async function safeTableCheck(){
-  // On teste fret_jobs sans casser la page
-  try{
-    const { error } = await supabase.from("fret_jobs").select("id").limit(1);
-    if(error) throw error;
-    return true;
-  }catch(e){
-    return false;
-  }
+function loadJobs(){
+  renderJobs(demoJobs());
+  log("Missions chargées (démo)");
 }
 
-async function loadDriverDispo(){
-  // Table attendue: fret_drivers (auth_user_id, phone, is_available, rating, last_seen_at)
-  try{
-    if(!currentUser) return;
-    const uid = currentUser.id;
-    const { data, error } = await supabase
-      .from("fret_drivers")
-      .select("is_available, rating, last_seen_at")
-      .eq("auth_user_id", uid)
-      .limit(1)
-      .maybeSingle();
-
-    if(error) throw error;
-
-    if(data && typeof data.is_available === "boolean"){
-      setDispoUI(data.is_available);
-    }
-    el("kpiRating").textContent = (data?.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
-    el("kpiLast").textContent = data?.last_seen_at ? fmtDate(data.last_seen_at) : "—";
-  }catch(e){
-    // pas grave
-  }
+function toggleDispo(){
+  log("Statut changé");
 }
 
-async function saveDriverDispo(){
-  try{
-    if(!currentUser) return;
-    const uid = currentUser.id;
-    // upsert
-    const payload = { auth_user_id: uid, phone: driverPhone, is_available: dispo, last_seen_at: new Date().toISOString() };
-    const { error } = await supabase.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
-    if(error) throw error;
-  }catch(e){
-    // silencieux
-  }
+function log(msg){
+  document.getElementById("log").textContent=msg;
 }
 
-async function loadJobs(){
-  jobsList.innerHTML = "";
-  emptyNotice.style.display = "none";
-  jobsList.insertAdjacentHTML("beforeend", `<div class="notice">Chargement des missions…</div>`);
-
-  const ok = await safeTableCheck();
-  if(!ok){
-    isDemoMode = true;
-    demoNotice.style.display = "block";
-    setConn(true, "Mode démo");
-    const list = demoJobs();
-    renderJobs(list);
-    // KPIs demo
-    el("kpiToday").textContent = money(list.reduce((s,j)=>s+(j.price_xof||0),0));
-    el("kpiWeek").textContent = String(list.length);
-    el("kpiRating").textContent = "—";
-    el("kpiLast").textContent = fmtDate(new Date().toISOString());
-    return;
-  }
-
-  isDemoMode = false;
-  demoNotice.style.display = "none";
-
-  try{
-    // Table attendue: fret_jobs
-    // colonnes conseillées: id, status, pickup_address, dropoff_address, cargo_label, volume, price_xof, driver_id, driver_phone, created_at
-    const uid = currentUser?.id;
-    const phone = driverPhone;
-
-    // On récupère les missions liées au chauffeur (uid ou phone)
-    let q = supabase.from("fret_jobs").select("*").order("created_at", { ascending:false }).limit(50);
-
-    // filtre souple: driver_id == uid OR driver_phone == phone
-    // (si driver_id n'existe pas => la requête peut échouer, donc on essaie 2 fois)
-    let data = null;
-
-    try{
-      const res = await q.or(`driver_id.eq.${uid},driver_phone.eq.${phone}`);
-      if(res.error) throw res.error;
-      data = res.data || [];
-    }catch(e1){
-      // fallback si driver_id n'existe pas
-      const res2 = await supabase
-        .from("fret_jobs")
-        .select("*")
-        .eq("driver_phone", phone)
-        .order("created_at", { ascending:false })
-        .limit(50);
-      if(res2.error) throw res2.error;
-      data = res2.data || [];
-    }
-
-    setConn(true, "Connecté");
-    renderJobs(data);
-
-    // KPIs simples
-    const today = new Date();
-    const startDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const sumToday = data
-      .filter(j => new Date(j.created_at).getTime() >= startDay && (String(j.status).toLowerCase()==="done" || String(j.status).toLowerCase()==="completed"))
-      .reduce((s,j)=>s + Number(j.price_xof ?? 0), 0);
-
-    const weekCount = data.filter(j => {
-      const t = new Date(j.created_at).getTime();
-      return (Date.now() - t) <= 7*24*3600*1000;
-    }).length;
-
-    el("kpiToday").textContent = money(sumToday);
-    el("kpiWeek").textContent = String(weekCount);
-
-  }catch(e){
-    isDemoMode = true;
-    demoNotice.style.display = "block";
-    setConn(false, "Erreur DB → démo");
-    renderJobs(demoJobs());
-  }
-}
-
-async function updateJobStatus(jobId, newStatus){
-  if(isDemoMode){
-    log("Mode démo : action simulée ✅");
-    return;
-  }
-  try{
-    const { error } = await supabase.from("fret_jobs").update({ status: newStatus }).eq("id", jobId);
-    if(error) throw error;
-    log("Statut mis à jour : " + newStatus.toUpperCase() + " ✅");
-    await loadJobs();
-  }catch(e){
-    log("Impossible de mettre à jour. (Vérifie table/colonnes) ❗");
-  }
-}
-
-/* ✅ AUTH GUARD */
-async function guard(){
-  const { data } = await supabase.auth.getSession();
-  const session = data?.session;
-
-  if(!session){
-    // Pas connecté => redirection login
-    window.location.href = ROUTES.LOGIN;
-    return;
-  }
-
-  currentUser = session.user;
-  driverPhone = currentUser.phone || currentUser.user_metadata?.phone || "—";
-
-  el("phoneLabel").textContent = driverPhone || "—";
-  setConn(true, "Connecté");
-  setDispoUI(true);
-
-  // essaie de charger dispo depuis DB
-  await loadDriverDispo();
-
-  // charge missions
-  await loadJobs();
-}
-
-/* ✅ EVENTS */
-document.getElementById("btnRefresh").addEventListener("click", async ()=>{
-  log("Actualisation…");
-  await loadJobs();
-  log("OK ✅");
-});
-
-document.getElementById("btnToggleDispo").addEventListener("click", async ()=>{
-  setDispoUI(!dispo);
-  log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
-  await saveDriverDispo();
-});
-
-document.getElementById("btnLogout").addEventListener("click", async ()=>{
-  try{
-    await supabase.auth.signOut();
-  }catch(e){}
-  window.location.href = ROUTES.LOGIN;
-});
-
-document.getElementById("btnOpenSupport").addEventListener("click", ()=>{
-  window.location.href = ROUTES.SUPPORT;
-});
-
-document.getElementById("btnGoHub").addEventListener("click", ()=>{
-  window.location.href = ROUTES.HUB;
-});
-
-document.getElementById("btnProfile").addEventListener("click", ()=>{
-  window.location.href = ROUTES.PROFILE;
-});
-
-document.getElementById("btnCashIn").addEventListener("click", ()=>{
-  // Ici tu brancheras DIGIY PAY (Wave/OM). Pour l’instant, panneau simple.
-  alert("Encaissement : branche DIGIY PAY ici (Wave / OM / Cash).");
-});
-
-/* Click actions on jobs */
-jobsList.addEventListener("click", async (e)=>{
-  const btn = e.target.closest("button");
-  if(!btn) return;
-
-  const wrap = e.target.closest(".job");
-  const jobId = wrap?.dataset?.id;
-  const act = btn.dataset.act;
-
-  if(!jobId) return;
-
-  if(act === "accept") return updateJobStatus(jobId, "accepted");
-  if(act === "start")  return updateJobStatus(jobId, "in_progress");
-  if(act === "done")   return updateJobStatus(jobId, "done");
-
-  if(act === "view"){
-    alert("Détails mission: " + jobId);
-    return;
-  }
-
-  if(act === "cancel"){
-    // pas d'annulation sauvage: juste signalement
-    const reason = prompt("Explique vite fait (signalement) :") || "";
-    log("Signalement envoyé ✅");
-    // Si tu as une table fret_job_events, tu peux l’insérer ici.
-    return;
-  }
-});
-
-/* Clock */
-setInterval(()=>{
-  const d = new Date();
-  el("clock").textContent = d.toLocaleString("fr-FR", { weekday:"short", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
-}, 1000);
-
-/* ✅ START */
-guard();
+/* START */
+loadJobs();
 </script>
-
 </body>
 </html>
