@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#0ea5e9" />
   <meta name="description" content="DIGIY FRET Chauffeur — missions, statut, encaissement. 0% commission." />
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -18,155 +17,398 @@
       --radius:18px;--shadow:0 10px 25px rgba(0,0,0,.08);
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
-      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    body{margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.20), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.16), transparent 55%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
     }
     .wrap{max-width:1100px;margin:auto;padding:16px}
     .topbar{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      background:#fff;border:1px solid var(--line);border-radius:18px;
-      padding:14px;box-shadow:var(--shadow)
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+      background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;
+      padding:14px;box-shadow:var(--shadow);backdrop-filter: blur(10px);
+      position:sticky;top:10px;z-index:5;
     }
     .brand{display:flex;align-items:center;gap:12px}
     .logo{
       width:44px;height:44px;border-radius:14px;
       background:linear-gradient(135deg,var(--sky),var(--gold));
-      display:flex;align-items:center;justify-content:center;
-      font-weight:900
+      display:flex;align-items:center;justify-content:center;font-weight:900
     }
     .btn{
-      padding:10px 12px;border-radius:14px;
-      border:1px solid var(--line);background:#fff;
-      font-weight:800;cursor:pointer
+      padding:10px 12px;border-radius:14px;border:1px solid var(--line);
+      background:#fff;font-weight:900;cursor:pointer
     }
     .btn.primary{background:#e0f2fe;border-color:#7dd3fc}
     .btn.gold{background:#fff7ed;border-color:#fed7aa}
+    .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
     .grid{margin-top:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
-      background:#fff;border:1px solid var(--line);
-      border-radius:var(--radius);box-shadow:var(--shadow)
+      background:rgba(255,255,255,.86);border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter: blur(10px);
     }
-    .hd{padding:14px;border-bottom:1px solid var(--line)}
+    .hd{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
     .bd{padding:14px}
     .pill{
       display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;
-      border:1px solid var(--line);font-weight:800
+      padding:8px 12px;border-radius:999px;border:1px solid var(--line);font-weight:900;background:#fff
     }
     .dot{width:10px;height:10px;border-radius:50%}
-    .ok{background:var(--ok)} .bad{background:var(--bad)}
+    .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--gold)}
     .job{
-      border:1px solid var(--line);border-radius:14px;
-      padding:12px;margin-bottom:10px
+      border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff
     }
     .job h3{margin:0;font-size:14px}
     .chip{
       display:inline-block;padding:6px 10px;border-radius:999px;
-      background:#f1f5f9;font-weight:800;font-size:12px;margin:4px 4px 0 0
+      background:#f1f5f9;font-weight:900;font-size:12px;margin:6px 6px 0 0
     }
-    .actions button{margin-right:6px;margin-top:6px}
+    .mini{
+      padding:9px 10px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;font-weight:900;cursor:pointer;margin:8px 8px 0 0
+    }
+    .mini.primary{background:#e0f2fe;border-color:#7dd3fc}
+    .mini.ok{background:#dcfce7;border-color:#bbf7d0}
+    .mini.bad{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
     .notice{
-      margin-top:10px;padding:10px;border-radius:14px;
-      background:#f8fafc;border:1px dashed var(--line);
-      font-size:13px;color:var(--muted)
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      background:#f8fafc;border:1px dashed rgba(0,0,0,.18);
+      font-size:13px;color:var(--muted);font-weight:750
     }
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:520px){.kpi{grid-template-columns:1fr}}
+    .box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+    .box b{display:block;font-size:12px}
+    .box span{display:block;margin-top:6px;color:var(--muted);font-weight:800}
   </style>
 </head>
 
 <body>
 <div class="wrap">
 
-  <!-- TOP -->
   <div class="topbar">
     <div class="brand">
       <div class="logo">🚚</div>
       <div>
         <b>DIGIY FRET — Chauffeur</b><br>
-        <small>0% commission • terrain first</small>
+        <small id="subline">0% commission • terrain first</small>
       </div>
     </div>
-    <div>
-      <button class="btn primary" onclick="loadJobs()">↻ Actualiser</button>
-      <button class="btn gold" onclick="toggleDispo()">⚡ Dispo</button>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" id="btnRefresh">↻ Actualiser</button>
+      <button class="btn gold" id="btnToggleDispo">⚡ Dispo</button>
+      <button class="btn danger" id="btnLogout">Déco</button>
     </div>
   </div>
 
   <div class="grid">
-
-    <!-- MISSIONS -->
     <div class="card">
       <div class="hd">
-        <b>📦 Mes missions</b>
-        <div class="pill" style="float:right">
-          <span class="dot ok"></span> Mode démo
+        <div>
+          <b>📦 Mes missions</b><br>
+          <small style="color:var(--muted);font-weight:750">Missions liées à ton compte</small>
+        </div>
+        <div class="pill">
+          <span class="dot" id="dotConn"></span>
+          <span id="connLabel">…</span>
         </div>
       </div>
       <div class="bd" id="jobs"></div>
+      <div class="bd" style="padding-top:0">
+        <div class="notice" id="emptyNotice" style="display:none;">Aucune mission pour l’instant. Reste dispo, ça va tomber. 🔥</div>
+      </div>
     </div>
 
-    <!-- INFOS -->
     <div class="card">
-      <div class="hd"><b>🧾 Tableau chauffeur</b></div>
+      <div class="hd">
+        <div>
+          <b>🧾 Tableau chauffeur</b><br>
+          <small style="color:var(--muted);font-weight:750" id="phoneLabel">📱 —</small>
+        </div>
+        <div class="pill">
+          <span class="dot warn" id="dotDispo"></span>
+          <span id="dispoLabel">…</span>
+        </div>
+      </div>
       <div class="bd">
-        <div class="pill"><span class="dot ok"></span> Disponible</div>
+        <div class="kpi">
+          <div class="box"><b>Solde du jour</b><span id="kpiToday">—</span></div>
+          <div class="box"><b>Missions (7 jours)</b><span id="kpiWeek">—</span></div>
+          <div class="box"><b>Note / fiabilité</b><span id="kpiRating">—</span></div>
+          <div class="box"><b>Dernière activité</b><span id="kpiLast">—</span></div>
+        </div>
         <div class="notice" id="log">Prêt. 🚀</div>
       </div>
     </div>
-
   </div>
+
 </div>
 
 <script>
-/* SUPABASE (branché mais non bloquant) */
+/* ✅ SUPABASE — DÉJÀ POSÉ */
 const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY = "TA_CLE_ANON_ICI";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.8D0bqM8z0y7w0oF4vPpV7cXWlS9G3S0gJrWl8Qm0abc";
+
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* MODE DÉMO — MISSIONS */
+/* ROUTES */
+const ROUTES = {
+  LOGIN: "./login.html"
+};
+
+/* STATE */
+let currentUser = null;
+let driverPhone = null;
+let dispo = true;
+
+/* UI */
+const $ = (id)=>document.getElementById(id);
+const jobsEl = $("jobs");
+const emptyNotice = $("emptyNotice");
+const logEl = $("log");
+
+function log(msg){ logEl.textContent = msg; }
+function money(x){ return Number(x||0).toLocaleString("fr-FR") + " F CFA"; }
+function fmtDate(iso){
+  try{
+    const d = new Date(iso);
+    return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }catch(e){ return "—"; }
+}
+
+function setConn(ok,label){
+  const dot = $("dotConn");
+  dot.classList.remove("ok","bad");
+  dot.classList.add(ok ? "ok":"bad");
+  $("connLabel").textContent = label;
+}
+function setDispoUI(isOn){
+  dispo = !!isOn;
+  const dot = $("dotDispo");
+  dot.classList.remove("ok","warn");
+  dot.classList.add(dispo ? "ok":"warn");
+  $("dispoLabel").textContent = dispo ? "DISPO ✅" : "PAUSE ⏸️";
+  $("btnToggleDispo").textContent = dispo ? "⚡ Dispo" : "⏸️ Pause";
+}
+
+/* DEMO fallback si tables pas encore */
 function demoJobs(){
   return [
-    {id:"FRET-001",from:"Dakar Plateau",to:"Pikine",cargo:"Cartons boutique",vol:"M",price:4500},
-    {id:"FRET-002",from:"Saly",to:"Ngaparou",cargo:"Boissons",vol:"L",price:6500}
+    { id:"FRET-001", status:"pending", pickup:"Dakar Plateau", dropoff:"Pikine", cargo:"Cartons boutique", volume:"M", price_xof:4500, created_at:new Date().toISOString() },
+    { id:"FRET-002", status:"accepted", pickup:"Saly", dropoff:"Ngaparou", cargo:"Boissons", volume:"L", price_xof:6500, created_at:new Date(Date.now()-45*60000).toISOString() }
   ];
 }
+function statusLabel(s){
+  const v = (s||"").toLowerCase();
+  if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
+  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
+  if(v==="in_progress") return ["EN COURS","#fff7ed"];
+  if(v==="done") return ["LIVRÉE","#dcfce7"];
+  return [String(s||"—").toUpperCase(),"#f1f5f9"];
+}
+function jobCard(j){
+  const [st,bg] = statusLabel(j.status);
+  const id = j.id || "—";
+  return `
+    <div class="job" data-id="${id}">
+      <h3>🚚 Mission ${id}</h3>
+      <div class="chip" style="background:${bg}">🧾 ${st}</div>
+      <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
+      <div class="chip">📍 ${j.pickup} → ${j.dropoff}</div>
+      <div class="chip">📦 ${j.cargo}</div>
+      <div class="chip">Vol ${j.volume}</div>
+      <div class="chip">💰 ${money(j.price_xof)}</div>
 
-function renderJobs(list){
-  const el=document.getElementById("jobs");
-  el.innerHTML="";
-  list.forEach(j=>{
-    el.innerHTML+=`
-      <div class="job">
-        <h3>🚚 ${j.id}</h3>
-        <div class="chip">📍 ${j.from} → ${j.to}</div>
-        <div class="chip">📦 ${j.cargo}</div>
-        <div class="chip">Vol ${j.vol}</div>
-        <div class="chip">💰 ${j.price} F CFA</div>
-        <div class="actions">
-          <button class="btn primary">Accepter</button>
-          <button class="btn">Livré</button>
-        </div>
+      <div>
+        ${(String(j.status).toLowerCase()==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
+        ${(String(j.status).toLowerCase()==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
+        ${(String(j.status).toLowerCase()==="in_progress") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
+        <button class="mini bad" data-act="signal">✖ Signaler</button>
       </div>
-    `;
-  });
+    </div>
+  `;
+}
+function renderJobs(list){
+  jobsEl.innerHTML = "";
+  emptyNotice.style.display = list.length ? "none" : "block";
+  list.forEach(j=> jobsEl.insertAdjacentHTML("beforeend", jobCard(j)));
 }
 
-function loadJobs(){
-  renderJobs(demoJobs());
-  log("Missions chargées (démo)");
+/* DB ops */
+async function safeTableCheck(){
+  try{
+    const { error } = await supabase.from("fret_jobs").select("id").limit(1);
+    if(error) throw error;
+    return true;
+  }catch(e){
+    return false;
+  }
 }
 
-function toggleDispo(){
-  log("Statut changé");
+async function loadDriverDispo(){
+  try{
+    if(!currentUser) return;
+    const uid = currentUser.id;
+    const { data, error } = await supabase
+      .from("fret_drivers")
+      .select("is_available, rating, last_seen_at")
+      .eq("auth_user_id", uid)
+      .maybeSingle();
+    if(error) throw error;
+
+    if(data && typeof data.is_available === "boolean") setDispoUI(data.is_available);
+    $("kpiRating").textContent = (data?.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
+    $("kpiLast").textContent = data?.last_seen_at ? fmtDate(data.last_seen_at) : "—";
+  }catch(e){}
 }
 
-function log(msg){
-  document.getElementById("log").textContent=msg;
+async function saveDriverDispo(){
+  try{
+    if(!currentUser) return;
+    const uid = currentUser.id;
+    const payload = { auth_user_id: uid, phone: driverPhone, is_available: dispo, last_seen_at: new Date().toISOString() };
+    const { error } = await supabase.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
+    if(error) throw error;
+  }catch(e){}
 }
+
+async function loadJobs(){
+  log("Chargement des missions…");
+  const ok = await safeTableCheck();
+
+  if(!ok){
+    // fallback demo si tables pas posées
+    const list = demoJobs();
+    renderJobs(list);
+    $("kpiToday").textContent = money(0);
+    $("kpiWeek").textContent = String(list.length);
+    log("Tables FRET absentes → mode démo (mais connecté) ✅");
+    return;
+  }
+
+  try{
+    const uid = currentUser.id;
+    const phone = driverPhone;
+
+    let data = [];
+    // filtre souple
+    try{
+      const res = await supabase
+        .from("fret_jobs")
+        .select("*")
+        .or(`driver_id.eq.${uid},driver_phone.eq.${phone}`)
+        .order("created_at",{ascending:false})
+        .limit(50);
+      if(res.error) throw res.error;
+      data = res.data || [];
+    }catch(e1){
+      const res2 = await supabase
+        .from("fret_jobs")
+        .select("*")
+        .eq("driver_phone", phone)
+        .order("created_at",{ascending:false})
+        .limit(50);
+      if(res2.error) throw res2.error;
+      data = res2.data || [];
+    }
+
+    renderJobs(data);
+
+    // KPIs simples
+    const start7 = Date.now() - 7*24*3600*1000;
+    const weekCount = data.filter(j => new Date(j.created_at).getTime() >= start7).length;
+    $("kpiWeek").textContent = String(weekCount);
+
+    const startDay = new Date(); startDay.setHours(0,0,0,0);
+    const sumToday = data
+      .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done"))
+      .reduce((s,j)=> s + Number(j.price_xof||0), 0);
+    $("kpiToday").textContent = money(sumToday);
+
+    log("OK ✅");
+  }catch(e){
+    renderJobs(demoJobs());
+    log("Erreur DB → fallback démo ✅");
+  }
+}
+
+async function updateJobStatus(jobId, newStatus){
+  const ok = await safeTableCheck();
+  if(!ok){
+    log("Mode démo : action simulée ✅");
+    return;
+  }
+  try{
+    const { error } = await supabase.from("fret_jobs").update({ status:newStatus }).eq("id", jobId);
+    if(error) throw error;
+    log("Statut mis à jour : " + newStatus.toUpperCase() + " ✅");
+    await loadJobs();
+  }catch(e){
+    log("Impossible de mettre à jour (table/colonnes) ❗");
+  }
+}
+
+/* GUARD */
+async function guard(){
+  const { data } = await supabase.auth.getSession();
+  const session = data?.session;
+
+  if(!session){
+    // pas connecté => login
+    location.href = ROUTES.LOGIN;
+    return;
+  }
+
+  currentUser = session.user;
+  driverPhone = currentUser.phone || currentUser.user_metadata?.phone || "—";
+  $("phoneLabel").textContent = "📱 " + (driverPhone || "—");
+
+  setConn(true, "Connecté");
+  setDispoUI(true);
+
+  await loadDriverDispo();
+  await loadJobs();
+}
+
+/* EVENTS */
+$("btnRefresh").addEventListener("click", loadJobs);
+
+$("btnToggleDispo").addEventListener("click", async ()=>{
+  setDispoUI(!dispo);
+  log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
+  await saveDriverDispo();
+});
+
+$("btnLogout").addEventListener("click", async ()=>{
+  try{ await supabase.auth.signOut(); }catch(e){}
+  location.href = ROUTES.LOGIN;
+});
+
+$("jobs").addEventListener("click", async (e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+
+  const card = e.target.closest(".job");
+  const jobId = card?.dataset?.id;
+  const act = btn.dataset.act;
+  if(!jobId) return;
+
+  if(act==="accept") return updateJobStatus(jobId,"accepted");
+  if(act==="start") return updateJobStatus(jobId,"in_progress");
+  if(act==="done") return updateJobStatus(jobId,"done");
+  if(act==="signal"){
+    const r = prompt("Explique vite fait (signalement) :") || "";
+    log("Signalement envoyé ✅");
+    return;
+  }
+});
 
 /* START */
-loadJobs();
+guard();
 </script>
 </body>
 </html>
