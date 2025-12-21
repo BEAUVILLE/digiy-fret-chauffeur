@@ -1,0 +1,84 @@
+
+---
+
+## 🗄️ Tables Supabase (recommandées)
+
+### `fret_drivers`
+| colonne | type | description |
+|------|------|------------|
+| auth_user_id | uuid | lien avec Supabase Auth |
+| phone | text | téléphone chauffeur |
+| is_available | boolean | dispo / pause |
+| rating | numeric | note fiabilité |
+| last_seen_at | timestamptz | dernière activité |
+
+### `fret_jobs`
+| colonne | type | description |
+|------|------|------------|
+| id | uuid | id mission |
+| status | text | pending / accepted / in_progress / done |
+| pickup_address | text | point A |
+| dropoff_address | text | point B |
+| cargo_label | text | marchandise |
+| volume | text | S / M / L / XL |
+| price_xof | integer | prix en FCFA |
+| driver_id | uuid | chauffeur |
+| driver_phone | text | sécurité terrain |
+| created_at | timestamptz | date |
+
+⚠️ **Si ces tables n’existent pas encore :**
+➡️ l’interface passe automatiquement en **MODE DÉMO** (aucun blocage).
+
+---
+
+## 🚀 Déploiement
+
+### Option simple (GitHub Pages)
+1. Créer un repo GitHub
+2. Ajouter `index.html` + `README.md`
+3. Activer **GitHub Pages**
+4. Accès immédiat via URL publique
+
+### Option serveur (VPS / Hostinger)
+- Copier les fichiers dans `public_html/`
+- Aucun build nécessaire
+- Fonctionne en PWA-ready
+
+---
+
+## 🔐 Sécurité
+
+- Aucune commission DIGIY
+- Paiement **direct chauffeur**
+- Données protégées par Supabase RLS
+- Téléphone = identité terrain
+
+---
+
+## 🦅 Philosophie DIGIY
+
+> DIGIY n’est pas une plateforme prédatrice.  
+> C’est une **infrastructure de souveraineté**.
+
+- Pas d’intermédiaire
+- Pas de vol de valeur
+- Pas de dépendance
+- Local, juste, scalable
+
+---
+
+## 🔜 Prochaines étapes possibles
+
+- 📲 App mobile (PWA)
+- 📍 Géolocalisation chauffeur
+- 📸 Preuve livraison (photo)
+- 💳 Intégration DIGIY PAY
+- 🔔 Notifications temps réel
+
+---
+
+## ∞ DIGIYLYFE
+
+Made with respect.  
+Bâti pour durer.  
+Enraciné en Afrique. 🦅
