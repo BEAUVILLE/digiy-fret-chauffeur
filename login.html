@@ -1,6 +1,42 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <!-- 🔐 DIGIY FRET — TOKEN GUARD -->
+  <script>
+  function getSession(){
+    try{
+      const token = localStorage.getItem("digiy_fret_driver_token");
+      const exp = localStorage.getItem("digiy_fret_driver_expires");
+      if(!token || !exp) return null;
+      return { token, exp: new Date(exp) };
+    }catch(e){ return null; }
+  }
+
+  function isExpired(exp){
+    return Date.now() >= exp.getTime();
+  }
+
+  function logout(reason){
+    try{
+      localStorage.removeItem("digiy_fret_driver_token");
+      localStorage.removeItem("digiy_fret_driver_expires");
+      localStorage.removeItem("digiy_fret_driver_phone");
+    }catch(e){}
+    alert(reason || "Session expirée");
+    location.href = "./login.html";
+  }
+
+  (function guard(){
+    const s = getSession();
+    if(!s) return logout("Veuillez vous reconnecter");
+    if(isExpired(s.exp)) return logout("Session expirée (30 min)");
+  })();
+  </script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DIGIY FRET — Chauffeur</title>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>DIGIY FRET — Login OTP</title>
