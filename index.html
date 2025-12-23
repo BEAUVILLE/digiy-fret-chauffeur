@@ -1,4 +1,5 @@
-<!-- TEST_PUSH_999 --><!DOCTYPE html>
+<!-- TEST_PUSH_999 -->
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
@@ -209,6 +210,31 @@ function normalizePhoneDisplay(phone){
   if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
   return p;
 }
+function safeTxt(v){
+  return (v === undefined || v === null || String(v).trim() === "") ? "Non précisé" : String(v);
+}
+function pickFrom(j){
+  const z = safeTxt(j.from_zone);
+  if(z !== "Non précisé") return z;
+
+  const c = safeTxt(j.pickup_city);
+  const a = safeTxt(j.pickup_area);
+  if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
+  if(a==="Non précisé") return c;
+  if(c==="Non précisé") return a;
+  return `${c} • ${a}`;
+}
+function pickTo(j){
+  const z = safeTxt(j.to_zone);
+  if(z !== "Non précisé") return z;
+
+  const c = safeTxt(j.drop_city);
+  const a = safeTxt(j.drop_area);
+  if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
+  if(a==="Non précisé") return c;
+  if(c==="Non précisé") return a;
+  return `${c} • ${a}`;
+}
 function setConn(ok,label){
   const dot = $("dotConn");
   dot.classList.remove("ok","bad","warn");
@@ -257,11 +283,21 @@ setDispoUI(true);
 /* UI builders */
 function statusLabel(s){
   const v = (s||"").toLowerCase();
+
+  // RPC (anciens)
   if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
-  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
   if(v==="started") return ["EN COURS","#fff7ed"];
   if(v==="done") return ["LIVRÉE","#dcfce7"];
   if(v==="refused") return ["REFUSÉE","#fff1f2"];
+
+  // Table (nouveaux)
+  if(v==="new") return ["EN ATTENTE","#f1f5f9"];
+  if(v==="onroute") return ["EN COURS","#fff7ed"];
+  if(v==="delivered") return ["LIVRÉE","#dcfce7"];
+  if(v==="cancelled") return ["REFUSÉE","#fff1f2"];
+
+  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
+
   return [String(s||"—").toUpperCase(),"#f1f5f9"];
 }
 function jobCard(j){
@@ -271,13 +307,13 @@ function jobCard(j){
       <h3>🚚 Mission ${j.id}</h3>
       <div class="chip" style="background:${bg}">🧾 ${st}</div>
       <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
-      <div class="chip">📍 ${j.from_zone} → ${j.to_zone}</div>
+      <div class="chip">📍 ${pickFrom(j)} → ${pickTo(j)}</div>
       <div class="chip">💰 ${money(j.price_xof)}</div>
       <div>
-        ${(String(j.status).toLowerCase()==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
+        ${(String(j.status).toLowerCase()==="pending" || String(j.status).toLowerCase()==="new") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
         ${(String(j.status).toLowerCase()==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
-        ${(String(j.status).toLowerCase()==="started") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
-        ${(String(j.status).toLowerCase()!=="done") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
+        ${(String(j.status).toLowerCase()==="started" || String(j.status).toLowerCase()==="onroute") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
+        ${(String(j.status).toLowerCase()!=="done" && String(j.status).toLowerCase()!=="delivered") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
       </div>
     </div>
   `;
@@ -311,7 +347,7 @@ async function loadJobs(){
 
   const startDay = new Date(); startDay.setHours(0,0,0,0);
   const sumToday = list
-    .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done"))
+    .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done" || String(j.status).toLowerCase()==="delivered"))
     .reduce((s,j)=> s + Number(j.price_xof||0), 0);
   $("kpiToday").textContent = money(sumToday);
 
@@ -333,7 +369,6 @@ async function actStart(id){
   loadJobs();
 }
 async function actDone(id){
-  // Optionnel si tu crées rpc_fret_done côté SQL
   const { error } = await sb.rpc("rpc_fret_done", { p_token: token, p_job_id: id });
   if(error) return log("RPC done absente/erreur ❗");
   log("Livrée ✅");
