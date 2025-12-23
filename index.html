@@ -109,7 +109,7 @@
       <div class="hd">
         <div>
           <b>📦 Mes missions</b><br>
-          <small style="color:var(--muted);font-weight:750">Missions liées à ton compte</small>
+          <small style="color:var(--muted);font-weight:750">Demandes FRET (assignées ou disponibles)</small>
         </div>
         <div class="pill">
           <span class="dot" id="dotConn"></span>
@@ -153,17 +153,24 @@ const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-/* ✅ Client unique, jamais redeclaré */
 window.__supabase ||= window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = window.__supabase;
 
 /* ROUTES */
 const ROUTES = { LOGIN: "./login.html" };
 
+/* TABLES (schéma national) */
+const T = {
+  DRIVERS: "freight_drivers",
+  REQUESTS: "freight_requests",
+  TRIPS: "freight_trips"
+};
+
 /* STATE */
 let currentUser = null;
 let driverPhone = "—";
 let dispo = true;
+let driverCityId = null;
 
 /* UI */
 const $ = (id)=>document.getElementById(id);
@@ -175,6 +182,7 @@ function log(msg){ logEl.textContent = msg; }
 function money(x){ return Number(x||0).toLocaleString("fr-FR") + " F CFA"; }
 function fmtDate(iso){
   try{
+    if(!iso) return "—";
     const d = new Date(iso);
     return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
   }catch(e){ return "—"; }
@@ -201,54 +209,232 @@ function setDispoUI(isOn){
   $("btnToggleDispo").textContent = dispo ? "⚡ Dispo" : "⏸️ Pause";
 }
 
-/* DEMO fallback si tables pas encore */
-function demoJobs(){
-  return [
-    { id:"FRET-001", status:"pending", pickup:"Dakar Plateau", dropoff:"Pikine", cargo:"Cartons boutique", volume:"M", price_xof:4500, created_at:new Date().toISOString() },
-    { id:"FRET-002", status:"accepted", pickup:"Saly", dropoff:"Ngaparou", cargo:"Boissons", volume:"L", price_xof:6500, created_at:new Date(Date.now()-45*60000).toISOString() }
-  ];
-}
-function statusLabel(s){
-  const v = (s||"").toLowerCase();
-  if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
+/* STATUS mapping (schéma national) */
+function niceStatus(s){
+  const v = String(s||"").toLowerCase();
+  if(v==="new") return ["NOUVELLE","#f1f5f9"];
+  if(v==="priced") return ["TARIFÉE","#e0f2fe"];
+  if(v==="searching") return ["RECHERCHE","#e0f2fe"];
+  if(v==="assigned") return ["ASSIGNÉE","#fff7ed"];
   if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
-  if(v==="in_progress") return ["EN COURS","#fff7ed"];
-  if(v==="done") return ["LIVRÉE","#dcfce7"];
+  if(v==="picked_up") return ["COLLECTÉE","#fff7ed"];
+  if(v==="in_transit") return ["EN ROUTE","#fff7ed"];
+  if(v==="delivered") return ["LIVRÉE","#dcfce7"];
   if(v==="cancelled") return ["ANNULÉE","#fff1f2"];
+  if(v==="expired") return ["EXPIRÉE","#fff1f2"];
   return [String(s||"—").toUpperCase(),"#f1f5f9"];
 }
-function jobCard(j){
-  const [st,bg] = statusLabel(j.status);
-  const id = j.id || "—";
+
+function jobCard(r){
+  const [st,bg] = niceStatus(r.status);
+  const id = r.id || "—";
+
+  const pickup = r.pickup_address || "Pickup —";
+  const dropoff = r.dropoff_address || "Dropoff —";
+  const cargo = r.item_type || "Marchandise";
+  const vol = r.volume || "S";
+
+  const price = (r.final_price_xof ?? r.quoted_price_xof ?? 0);
+
+  // boutons selon status
+  const s = String(r.status||"").toLowerCase();
+  const canAccept = (s==="priced" || s==="searching" || s==="assigned") && (!r.assigned_driver_phone || r.assigned_driver_phone===driverPhone);
+  const canPickup = (s==="accepted");
+  const canTransit = (s==="picked_up");
+  const canDone = (s==="in_transit");
+
   return `
     <div class="job" data-id="${id}">
-      <h3>🚚 Mission ${id}</h3>
+      <h3>🚚 Demande ${id.slice(0,8).toUpperCase()}</h3>
       <div class="chip" style="background:${bg}">🧾 ${st}</div>
-      <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
-      <div class="chip">📍 ${j.pickup} → ${j.dropoff}</div>
-      <div class="chip">📦 ${j.cargo}</div>
-      <div class="chip">Vol ${j.volume}</div>
-      <div class="chip">💰 ${money(j.price_xof)}</div>
+      <div class="chip">🕒 ${fmtDate(r.created_at)}</div>
+      <div class="chip">📍 ${pickup} → ${dropoff}</div>
+      <div class="chip">📦 ${cargo}</div>
+      <div class="chip">Vol ${vol}</div>
+      <div class="chip">💰 ${money(price)}</div>
 
       <div>
-        ${(String(j.status).toLowerCase()==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
-        ${(String(j.status).toLowerCase()==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
-        ${(String(j.status).toLowerCase()==="in_progress") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
-        <button class="mini bad" data-act="signal">✖ Signaler</button>
+        ${canAccept ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
+        ${canPickup ? `<button class="mini ok" data-act="pickup">📦 Pickup</button>` : ``}
+        ${canTransit ? `<button class="mini ok" data-act="transit">🚚 En transit</button>` : ``}
+        ${canDone ? `<button class="mini ok" data-act="done">✅ Livré</button>` : ``}
+        <button class="mini bad" data-act="cancel">✖ Annuler</button>
       </div>
     </div>
   `;
 }
+
 function renderJobs(list){
   jobsEl.innerHTML = "";
   emptyNotice.style.display = list.length ? "none" : "block";
-  list.forEach(j=> jobsEl.insertAdjacentHTML("beforeend", jobCard(j)));
+  list.forEach(r=> jobsEl.insertAdjacentHTML("beforeend", jobCard(r)));
 }
 
-/* DB ops */
-async function safeTableCheck(){
+/* Helpers */
+function startOfToday(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function daysAgo(n){
+  const d = new Date(Date.now() - n*24*3600*1000);
+  return d;
+}
+
+async function upsertDriver(){
+  // phone-first, on garde is_online + last_seen_at + city_id si déjà connu
   try{
-    const { error } = await sb.from("fret_jobs").select("id").limit(1);
+    const payload = {
+      phone: driverPhone,
+      is_online: dispo,
+      last_seen_at: new Date().toISOString(),
+      city_id: driverCityId
+    };
+    const { error } = await sb.from(T.DRIVERS).upsert(payload, { onConflict: "phone" });
+    if(error) throw error;
+  }catch(e){
+    // si RLS ou table absente => on ignore sans casser la page
+  }
+}
+
+async function loadDriver(){
+  try{
+    const { data, error } = await sb
+      .from(T.DRIVERS)
+      .select("phone,is_online,rating,last_seen_at,city_id")
+      .eq("phone", driverPhone)
+      .maybeSingle();
+    if(error) throw error;
+
+    if(data){
+      if(typeof data.is_online === "boolean") setDispoUI(data.is_online);
+      $("kpiRating").textContent = (data.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
+      $("kpiLast").textContent = data.last_seen_at ? fmtDate(data.last_seen_at) : "—";
+      driverCityId = data.city_id || null;
+    }else{
+      $("kpiRating").textContent = "—";
+      $("kpiLast").textContent = "—";
+    }
+  }catch(e){
+    // silent
+  }
+}
+
+async function ensureDriverCity(){
+  // Si le driver n’a pas city_id, on essaie de le déduire depuis la dernière demande assignée
+  if(driverCityId) return;
+  try{
+    const { data, error } = await sb
+      .from(T.REQUESTS)
+      .select("city_id")
+      .eq("assigned_driver_phone", driverPhone)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    if(error) throw error;
+    const cid = data?.[0]?.city_id || null;
+    if(cid){
+      driverCityId = cid;
+      await upsertDriver();
+    }
+  }catch(e){}
+}
+
+async function loadRequests(){
+  log("Chargement des demandes…");
+
+  // 1) Mes demandes assignées
+  // 2) Si dispo + city_id connu => demandes "searching/priced" de la ville
+  try{
+    let list = [];
+
+    // assignées
+    const a = await sb
+      .from(T.REQUESTS)
+      .select("*")
+      .eq("assigned_driver_phone", driverPhone)
+      .order("created_at",{ascending:false})
+      .limit(50);
+
+    if(a.error) throw a.error;
+    list = (a.data || []);
+
+    // disponibles (si dispo)
+    if(dispo){
+      await ensureDriverCity();
+      if(driverCityId){
+        const b = await sb
+          .from(T.REQUESTS)
+          .select("*")
+          .eq("city_id", driverCityId)
+          .in("status", ["priced","searching"])
+          .order("created_at",{ascending:false})
+          .limit(50);
+        if(!b.error && Array.isArray(b.data)){
+          // merge sans doublons
+          const map = new Map(list.map(x=>[x.id,x]));
+          b.data.forEach(x=>{ if(!map.has(x.id)) map.set(x.id,x); });
+          list = Array.from(map.values());
+        }
+      }
+    }
+
+    renderJobs(list);
+
+    // KPI semaine
+    const start7 = daysAgo(7).getTime();
+    const weekCount = list.filter(r => new Date(r.created_at).getTime() >= start7).length;
+    $("kpiWeek").textContent = String(weekCount);
+
+    // KPI today = somme livrée aujourd’hui
+    const today0 = startOfToday().getTime();
+    const sumToday = list
+      .filter(r => new Date(r.created_at).getTime() >= today0 && String(r.status).toLowerCase()==="delivered")
+      .reduce((s,r)=> s + Number(r.final_price_xof ?? r.quoted_price_xof ?? 0), 0);
+    $("kpiToday").textContent = money(sumToday);
+
+    log("OK ✅");
+  }catch(e){
+    renderJobs([]);
+    log("Erreur chargement (table/RLS?) ❗");
+  }
+}
+
+/* Actions statut */
+async function createOrUpdateTripForRequest(requestId, tripStatus){
+  // On crée une ligne freight_trips si absente, sinon update status
+  try{
+    const existing = await sb
+      .from(T.TRIPS)
+      .select("id,status")
+      .eq("request_id", requestId)
+      .eq("driver_phone", driverPhone)
+      .order("created_at",{ascending:false})
+      .limit(1);
+
+    if(existing.error) throw existing.error;
+
+    const row = existing.data?.[0];
+
+    if(!row){
+      const ins = await sb.from(T.TRIPS).insert([{
+        request_id: requestId,
+        driver_phone: driverPhone,
+        status: tripStatus
+      }]);
+      if(ins.error) throw ins.error;
+    }else{
+      const upd = await sb.from(T.TRIPS).update({ status: tripStatus }).eq("id", row.id);
+      if(upd.error) throw upd.error;
+    }
+  }catch(e){
+    // pas bloquant
+  }
+}
+
+async function updateRequestStatus(requestId, newStatus, extra={}){
+  try{
+    const payload = Object.assign({ status: newStatus }, extra);
+    const { error } = await sb.from(T.REQUESTS).update(payload).eq("id", requestId);
     if(error) throw error;
     return true;
   }catch(e){
@@ -256,149 +442,122 @@ async function safeTableCheck(){
   }
 }
 
-async function loadDriverDispo(){
-  try{
-    if(!currentUser) return;
-    const uid = currentUser.id;
-    const { data, error } = await sb
-      .from("fret_drivers")
-      .select("is_available, rating, last_seen_at, phone")
-      .eq("auth_user_id", uid)
-      .maybeSingle();
-    if(error) throw error;
+async function actAccept(requestId){
+  log("Acceptation…");
+  // lock : on assigne le phone + status accepted + accepted_at
+  const ok = await updateRequestStatus(requestId, "accepted", {
+    assigned_driver_phone: driverPhone,
+    accepted_at: new Date().toISOString()
+  });
+  if(!ok){ log("Impossible d’accepter (RLS/colonnes) ❗"); return; }
 
-    if(data?.phone) driverPhone = normalizePhoneDisplay(data.phone);
-    $("phoneLabel").textContent = "📱 " + driverPhone;
-
-    if(typeof data?.is_available === "boolean") setDispoUI(data.is_available);
-    $("kpiRating").textContent = (data?.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
-    $("kpiLast").textContent = data?.last_seen_at ? fmtDate(data.last_seen_at) : "—";
-  }catch(e){}
+  await createOrUpdateTripForRequest(requestId, "accepted");
+  log("Accepté ✅");
+  await loadRequests();
 }
 
-async function saveDriverDispo(){
-  try{
-    if(!currentUser) return;
-    const uid = currentUser.id;
-    const payload = {
-      auth_user_id: uid,
-      phone: driverPhone,
-      is_available: dispo,
-      last_seen_at: new Date().toISOString()
-    };
-    const { error } = await sb.from("fret_drivers").upsert(payload, { onConflict: "auth_user_id" });
-    if(error) throw error;
-  }catch(e){}
+async function actPickup(requestId){
+  log("Pickup…");
+  const ok = await updateRequestStatus(requestId, "picked_up", { picked_up_at: new Date().toISOString() });
+  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
+
+  await createOrUpdateTripForRequest(requestId, "picked_up");
+  log("Pickup OK ✅");
+  await loadRequests();
 }
 
-async function loadJobs(){
-  log("Chargement des missions…");
-  const ok = await safeTableCheck();
+async function actTransit(requestId){
+  log("Mise en transit…");
+  const ok = await updateRequestStatus(requestId, "in_transit");
+  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
 
-  if(!ok){
-    const list = demoJobs();
-    renderJobs(list);
-    $("kpiToday").textContent = money(0);
-    $("kpiWeek").textContent = String(list.length);
-    log("Tables FRET absentes → mode démo (mais connecté) ✅");
-    return;
-  }
+  await createOrUpdateTripForRequest(requestId, "in_transit");
+  log("En route ✅");
+  await loadRequests();
+}
 
+async function actDone(requestId){
+  log("Livraison…");
+  const ok = await updateRequestStatus(requestId, "delivered", { delivered_at: new Date().toISOString() });
+  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
+
+  await createOrUpdateTripForRequest(requestId, "delivered");
+  log("Livré ✅");
+  await loadRequests();
+}
+
+async function actCancel(requestId){
+  const reason = prompt("Raison annulation ? (court)");
+  log("Annulation…");
+  const ok = await updateRequestStatus(requestId, "cancelled", { cancelled_reason: reason || "cancelled" });
+  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
+
+  await createOrUpdateTripForRequest(requestId, "cancelled");
+  log("Annulé ✅");
+  await loadRequests();
+}
+
+/* GUARD (auth ou phone local) */
+function getLocalDriverPhone(){
+  // tu peux aussi stocker ici un PIN-session si tu veux
+  const p =
+    localStorage.getItem("digiy_fret_driver_phone") ||
+    localStorage.getItem("digiy_driver_phone") ||
+    "";
+  return normalizePhoneDisplay(p);
+}
+
+async function guard(){
+  // 1) si session Supabase existe => OK
+  // 2) sinon => fallback phone local ; si pas => login
   try{
-    const uid = currentUser.id;
-    const phone = driverPhone;
+    const { data } = await sb.auth.getSession();
+    const session = data?.session;
 
-    let data = [];
-    try{
-      const res = await sb
-        .from("fret_jobs")
-        .select("*")
-        .or(`driver_id.eq.${uid},driver_phone.eq.${phone}`)
-        .order("created_at",{ascending:false})
-        .limit(50);
-      if(res.error) throw res.error;
-      data = res.data || [];
-    }catch(e1){
-      const res2 = await sb
-        .from("fret_jobs")
-        .select("*")
-        .eq("driver_phone", phone)
-        .order("created_at",{ascending:false})
-        .limit(50);
-      if(res2.error) throw res2.error;
-      data = res2.data || [];
+    if(session){
+      currentUser = session.user;
+      driverPhone = normalizePhoneDisplay(
+        currentUser.phone || currentUser.user_metadata?.phone || getLocalDriverPhone()
+      );
+    }else{
+      driverPhone = getLocalDriverPhone();
     }
 
-    renderJobs(data);
+    if(!driverPhone || driverPhone==="—"){
+      location.href = ROUTES.LOGIN;
+      return;
+    }
 
-    const start7 = Date.now() - 7*24*3600*1000;
-    const weekCount = data.filter(j => new Date(j.created_at).getTime() >= start7).length;
-    $("kpiWeek").textContent = String(weekCount);
+    $("phoneLabel").textContent = "📱 " + driverPhone;
+    setConn(true, "Connecté");
+    setDispoUI(true);
 
-    const startDay = new Date(); startDay.setHours(0,0,0,0);
-    const sumToday = data
-      .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done"))
-      .reduce((s,j)=> s + Number(j.price_xof||0), 0);
-    $("kpiToday").textContent = money(sumToday);
-
-    log("OK ✅");
+    await loadDriver();
+    await upsertDriver();
+    await loadRequests();
   }catch(e){
-    renderJobs(demoJobs());
-    log("Erreur DB → fallback démo ✅");
-  }
-}
-
-async function updateJobStatus(jobId, newStatus){
-  const ok = await safeTableCheck();
-  if(!ok){
-    log("Mode démo : action simulée ✅");
-    return;
-  }
-  try{
-    const { error } = await sb.from("fret_jobs").update({ status:newStatus }).eq("id", jobId);
-    if(error) throw error;
-    log("Statut mis à jour : " + newStatus.toUpperCase() + " ✅");
-    await loadJobs();
-  }catch(e){
-    log("Impossible de mettre à jour (table/colonnes) ❗");
-  }
-}
-
-/* GUARD */
-async function guard(){
-  const { data } = await sb.auth.getSession();
-  const session = data?.session;
-
-  if(!session){
+    setConn(false, "Hors ligne");
     location.href = ROUTES.LOGIN;
-    return;
   }
-
-  currentUser = session.user;
-
-  driverPhone = normalizePhoneDisplay(
-    currentUser.phone || currentUser.user_metadata?.phone
-  );
-  $("phoneLabel").textContent = "📱 " + driverPhone;
-
-  setConn(true, "Connecté");
-  setDispoUI(true);
-
-  await loadDriverDispo();
-  await loadJobs();
 }
 
 /* EVENTS */
-$("btnRefresh").addEventListener("click", loadJobs);
+$("btnRefresh").addEventListener("click", loadRequests);
 
 $("btnToggleDispo").addEventListener("click", async ()=>{
   setDispoUI(!dispo);
   log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
-  await saveDriverDispo();
+  await upsertDriver();
+  await loadRequests();
 });
 
 $("btnLogout").addEventListener("click", async ()=>{
   try{ await sb.auth.signOut(); }catch(e){}
+  // on nettoie aussi le fallback local
+  try{
+    localStorage.removeItem("digiy_fret_driver_phone");
+    localStorage.removeItem("digiy_driver_phone");
+  }catch(e){}
   location.href = ROUTES.LOGIN;
 });
 
@@ -407,17 +566,15 @@ $("jobs").addEventListener("click", async (e)=>{
   if(!btn) return;
 
   const card = e.target.closest(".job");
-  const jobId = card?.dataset?.id;
+  const requestId = card?.dataset?.id;
   const act = btn.dataset.act;
-  if(!jobId) return;
+  if(!requestId) return;
 
-  if(act==="accept") return updateJobStatus(jobId,"accepted");
-  if(act==="start") return updateJobStatus(jobId,"in_progress");
-  if(act==="done") return updateJobStatus(jobId,"done");
-  if(act==="signal"){
-    prompt("Explique vite fait (signalement) :");
-    log("Signalement envoyé ✅");
-  }
+  if(act==="accept") return actAccept(requestId);
+  if(act==="pickup") return actPickup(requestId);
+  if(act==="transit") return actTransit(requestId);
+  if(act==="done") return actDone(requestId);
+  if(act==="cancel") return actCancel(requestId);
 });
 
 /* START */
@@ -425,5 +582,3 @@ guard();
 </script>
 </body>
 </html>
-
-
