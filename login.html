@@ -21,9 +21,10 @@
   window.__digiyLoggingOut = true;
 
   try{
-    localStorage.removeItem("digiy_fret_driver_token");
-    localStorage.removeItem("digiy_fret_driver_expires");
-    localStorage.removeItem("digiy_fret_driver_phone");
+    localStorage.setItem("digiy_fret_driver_token", data.token);
+localStorage.setItem("digiy_fret_driver_expires", data.expires_at);
+localStorage.setItem("digiy_fret_driver_phone", phone);
+location.href = "./index.html";
   }catch(e){}
 
   if (reason){
