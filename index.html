@@ -214,15 +214,15 @@ function safeTxt(v){
   return (v === undefined || v === null || String(v).trim() === "") ? "Non précisé" : String(v);
 }
 
-/* ✅ PATCH RPC: pickup/dropoff (fallback table) */
+/* ✅ RPC fields: pickup/dropoff (fallback table) */
 function pickFrom(j){
-  const p = safeTxt(j.pickup);         // RPC
+  const p = safeTxt(j.pickup);
   if(p !== "Non précisé") return p;
 
-  const z = safeTxt(j.from_zone);      // parfois
+  const z = safeTxt(j.from_zone);
   if(z !== "Non précisé") return z;
 
-  const c = safeTxt(j.pickup_city);    // table
+  const c = safeTxt(j.pickup_city);
   const a = safeTxt(j.pickup_area);
   if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
   if(a==="Non précisé") return c;
@@ -230,13 +230,13 @@ function pickFrom(j){
   return `${c} • ${a}`;
 }
 function pickTo(j){
-  const d = safeTxt(j.dropoff);        // RPC
+  const d = safeTxt(j.dropoff);
   if(d !== "Non précisé") return d;
 
   const z = safeTxt(j.to_zone);
   if(z !== "Non précisé") return z;
 
-  const c = safeTxt(j.drop_city);      // table
+  const c = safeTxt(j.drop_city);
   const a = safeTxt(j.drop_area);
   if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
   if(a==="Non précisé") return c;
@@ -299,7 +299,7 @@ function statusLabel(s){
   if(v==="done") return ["LIVRÉE","#dcfce7"];
   if(v==="refused") return ["REFUSÉE","#fff1f2"];
 
-  // si un jour tu changes
+  // compat future
   if(v==="new") return ["EN ATTENTE","#f1f5f9"];
   if(v==="onroute") return ["EN COURS","#fff7ed"];
   if(v==="delivered") return ["LIVRÉE","#dcfce7"];
@@ -307,8 +307,11 @@ function statusLabel(s){
 
   return [String(s||"—").toUpperCase(),"#f1f5f9"];
 }
+
 function jobCard(j){
   const [st,bg] = statusLabel(j.status);
+  const stv = String(j.status||"").toLowerCase();
+
   return `
     <div class="job" data-id="${j.id}">
       <h3>🚚 Mission ${j.id}</h3>
@@ -316,15 +319,20 @@ function jobCard(j){
       <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
       <div class="chip">📍 ${pickFrom(j)} → ${pickTo(j)}</div>
       <div class="chip">💰 ${money(j.price_xof)}</div>
+
       <div>
-        ${(String(j.status).toLowerCase()==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
-        ${(String(j.status).toLowerCase()==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
-        ${(String(j.status).toLowerCase()==="started") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
-        ${(String(j.status).toLowerCase()!=="done") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
+        ${(stv==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
+        ${(stv==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
+
+        <!-- ✅ PIN LIVRAISON (uniquement quand "started") -->
+        ${(stv==="started") ? `<button class="mini ok" data-act="pin">✅ Valider PIN</button>` : ``}
+
+        ${(stv!=="done") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
       </div>
     </div>
   `;
 }
+
 function renderJobs(list){
   jobsEl.innerHTML = "";
   emptyNotice.style.display = list.length ? "none" : "block";
@@ -375,16 +383,42 @@ async function actStart(id){
   log("Démarrée ✅");
   loadJobs();
 }
-async function actDone(id){
-  const { error } = await sb.rpc("rpc_fret_done", { p_token: token, p_job_id: id });
-  if(error) return log("RPC done absente/erreur ❗");
-  log("Livrée ✅");
-  loadJobs();
-}
 async function actRefuse(id){
   const { error } = await sb.rpc("rpc_fret_refuse", { p_token: token, p_job_id: id });
   if(error) return log("Erreur refus ❗");
   log("Refusée ❌");
+  loadJobs();
+}
+
+/* ✅ PIN — CONFIRMATION LIVRAISON */
+async function actPin(id){
+  const pin = prompt("PIN livraison (4 chiffres) :");
+  if(pin === null) return; // annuler
+  const clean = String(pin).trim();
+
+  if(!/^\d{4}$/.test(clean)){
+    return log("PIN invalide (4 chiffres) ❗");
+  }
+
+  log("Vérification PIN…");
+
+  const { data, error } = await sb.rpc("rpc_fret_confirm_pin", {
+    p_token: token,
+    p_job_id: id,
+    p_pin: clean
+  });
+
+  if(error){
+    console.error("PIN_ERROR =", error);
+    return log("PIN incorrect ❌");
+  }
+
+  // si ton RPC renvoie {ok:true}
+  if(data && data.ok === true){
+    log("Livraison validée ✅");
+  }else{
+    log("OK ✅");
+  }
   loadJobs();
 }
 
@@ -409,7 +443,7 @@ $("jobs").addEventListener("click", async (e)=>{
 
   if(act==="accept") return actAccept(id);
   if(act==="start") return actStart(id);
-  if(act==="done") return actDone(id);
+  if(act==="pin") return actPin(id);
   if(act==="refuse") return actRefuse(id);
 });
 
