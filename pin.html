@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY FRET — Validation Livraison (PIN)</title>
+  <meta name="theme-color" content="#16a34a" />
+  <style>
+    :root{
+      --bg:#f7fbf8; --card:#ffffff; --line:rgba(2,6,23,.12);
+      --text:#0f172a; --muted:#475569;
+      --green:#16a34a; --gold:#facc15; --danger:#ef4444;
+      --radius:18px; --shadow:0 14px 32px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:18px 16px;background:linear-gradient(135deg, rgba(22,163,74,.16), rgba(250,204,21,.14));border-bottom:1px solid var(--line)}
+    .wrap{max-width:780px;margin:0 auto;padding:16px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-weight:1000;
+      background:linear-gradient(135deg,var(--gold),#f97316);color:#111827;box-shadow:0 12px 26px rgba(250,204,21,.25)}
+    h1{margin:0;font-size:18px;font-weight:1000}
+    .sub{margin:4px 0 0;color:var(--muted);font-weight:700;font-size:13px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-top:14px}
+    label{display:block;font-weight:900;font-size:13px;margin:10px 0 6px}
+    input{width:100%;padding:12px 12px;border:1px solid rgba(2,6,23,.14);border-radius:14px;font-size:16px;outline:none}
+    input:focus{border-color:rgba(22,163,74,.55);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
+    .row{display:grid;grid-template-columns:1fr;gap:10px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;cursor:pointer}
+    .primary{background:var(--green);color:#fff}
+    .ghost{background:transparent;border:1px solid rgba(2,6,23,.18);color:var(--text)}
+    .danger{background:var(--danger);color:#fff}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;font-weight:900;font-size:12px;border:1px solid rgba(2,6,23,.12);background:rgba(255,255,255,.7)}
+    .ok{color:var(--green)}
+    .bad{color:var(--danger)}
+    .muted{color:var(--muted)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+    .k{font-size:12px;color:var(--muted);font-weight:800}
+    .v{font-size:14px;font-weight:950}
+    .sep{height:1px;background:rgba(2,6,23,.10);margin:12px 0}
+    .note{font-size:12px;color:var(--muted);font-weight:700;line-height:1.4}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo">∞</div>
+      <div>
+        <h1>DIGIY FRET — Validation Livraison</h1>
+        <div class="sub">PIN livraison • preuve simple • terrain first</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="card">
+    <div class="row">
+      <label>ID Commande (fret_orders.id)</label>
+      <input id="orderId" placeholder="Ex: 7b7c1f2a-...." />
+
+      <label>PIN client (4 chiffres)</label>
+      <input id="pin" inputmode="numeric" maxlength="4" placeholder="Ex: 1234" />
+
+      <div class="btns">
+        <button class="ghost" id="btnLoad">Charger commande</button>
+        <button class="primary" id="btnValidate">Valider livraison</button>
+        <button class="danger" id="btnCancel">Annuler</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div id="statusLine" class="pill muted">⏳ En attente…</div>
+
+      <div id="orderBox" style="display:none;margin-top:10px">
+        <div class="grid2">
+          <div>
+            <div class="k">Client</div>
+            <div class="v" id="oClient">—</div>
+          </div>
+          <div>
+            <div class="k">Statut</div>
+            <div class="v" id="oStatus">—</div>
+          </div>
+          <div>
+            <div class="k">Départ</div>
+            <div class="v" id="oFrom">—</div>
+          </div>
+          <div>
+            <div class="k">Arrivée</div>
+            <div class="v" id="oTo">—</div>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="note">
+          Astuce terrain : le client te donne le PIN **oralement**. Sans PIN correct = pas livré.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* 🔐 SUPABASE — DÉJÀ POSÉ */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.Wm3b1yqR4c7o3a3o4lP0d2m0qYp9b0oQ1yq0y0y0y0y0"; // (ta clé complète ici si différente)
+
+/* supabase-js v2 */
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+s.onload = () => boot();
+document.head.appendChild(s);
+
+function getDriverSession(){
+  try{
+    const token = localStorage.getItem("digiy_fret_driver_token");
+    const exp = localStorage.getItem("digiy_fret_driver_expires");
+    if(!token || !exp) return null;
+    if(Date.now() >= new Date(exp).getTime()) return null;
+    return { token };
+  }catch(e){ return null; }
+}
+
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function setLine(type, txt){
+  const el = document.getElementById("statusLine");
+  el.className = "pill " + (type==="ok" ? "ok" : type==="bad" ? "bad" : "muted");
+  el.textContent = txt;
+}
+
+let supabase;
+
+function boot(){
+  const session = getDriverSession();
+  if(!session){
+    setLine("bad","⛔ Session chauffeur expirée. Retour dashboard / login.");
+    return;
+  }
+
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: "Bearer " + session.token } }
+  });
+
+  // prefill via ?id=
+  const url = new URL(location.href);
+  const id = url.searchParams.get("id");
+  if(id) document.getElementById("orderId").value = id;
+
+  document.getElementById("btnLoad").onclick = loadOrder;
+  document.getElementById("btnValidate").onclick = validatePin;
+  document.getElementById("btnCancel").onclick = () => history.back();
+
+  setLine("muted","✅ Prêt. Charge la commande puis valide avec le PIN.");
+}
+
+async function loadOrder(){
+  const orderId = document.getElementById("orderId").value.trim();
+  if(!orderId){ setLine("bad","⚠️ Mets l’ID commande."); return; }
+
+  setLine("muted","⏳ Chargement…");
+  const { data, error } = await supabase
+    .from("fret_orders")
+    .select("id, client_phone, driver_phone, status, pickup_city, pickup_area, drop_city, drop_area, validated_at")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if(error){ setLine("bad","⛔ Erreur chargement: " + error.message); return; }
+  if(!data){ setLine("bad","❌ Commande introuvable."); return; }
+
+  document.getElementById("orderBox").style.display = "block";
+  document.getElementById("oClient").textContent = data.client_phone || "—";
+  document.getElementById("oStatus").textContent = data.status || "—";
+  document.getElementById("oFrom").textContent = [data.pickup_city, data.pickup_area].filter(Boolean).join(" • ") || "—";
+  document.getElementById("oTo").textContent = [data.drop_city, data.drop_area].filter(Boolean).join(" • ") || "—";
+
+  if(data.status === "delivered"){
+    setLine("ok","✅ Déjà livré (" + (data.validated_at ? new Date(data.validated_at).toLocaleString() : "ok") + ").");
+  }else{
+    setLine("muted","✅ Commande chargée. Saisis le PIN client.");
+  }
+}
+
+async function validatePin(){
+  const orderId = document.getElementById("orderId").value.trim();
+  const pin = document.getElementById("pin").value.trim();
+
+  if(!orderId){ setLine("bad","⚠️ Mets l’ID commande."); return; }
+  if(!/^\d{4}$/.test(pin)){ setLine("bad","⚠️ PIN invalide. (4 chiffres)"); return; }
+
+  setLine("muted","🔐 Vérification PIN…");
+
+  // 1) lire hash stocké
+  const { data: order, error: e1 } = await supabase
+    .from("fret_orders")
+    .select("id, driver_phone, status, delivery_pin_hash")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if(e1){ setLine("bad","⛔ Erreur lecture: " + e1.message); return; }
+  if(!order){ setLine("bad","❌ Commande introuvable."); return; }
+  if(order.status === "delivered"){ setLine("ok","✅ Déjà livré."); return; }
+  if(!order.delivery_pin_hash){ setLine("bad","⚠️ PIN non généré sur cette commande."); return; }
+
+  // 2) comparer hash
+  const computed = await sha256Hex(orderId + ":" + pin);
+  if(computed !== order.delivery_pin_hash){
+    setLine("bad","❌ PIN incorrect. Re-demande au client.");
+    return;
+  }
+
+  // 3) valider livraison
+  setLine("muted","✅ PIN OK… validation livraison…");
+  const { error: e2 } = await supabase
+    .from("fret_orders")
+    .update({ status:"delivered", validated_at: new Date().toISOString() })
+    .eq("id", orderId);
+
+  if(e2){ setLine("bad","⛔ Erreur validation: " + e2.message); return; }
+
+  setLine("ok","🎉 Livré confirmé. Course terminée.");
+  await loadOrder();
+}
+</script>
+
+</body>
+</html>
