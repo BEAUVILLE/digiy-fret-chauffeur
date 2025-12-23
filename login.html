@@ -17,14 +17,23 @@
   }
 
   function logout(reason){
-    try{
-      localStorage.removeItem("digiy_fret_driver_token");
-      localStorage.removeItem("digiy_fret_driver_expires");
-      localStorage.removeItem("digiy_fret_driver_phone");
-    }catch(e){}
-    alert(reason || "Session expirée");
-    location.href = "./login.html";
+  if (window.__digiyLoggingOut) return;
+  window.__digiyLoggingOut = true;
+
+  try{
+    localStorage.removeItem("digiy_fret_driver_token");
+    localStorage.removeItem("digiy_fret_driver_expires");
+    localStorage.removeItem("digiy_fret_driver_phone");
+  }catch(e){}
+
+  if (reason){
+    alert(reason);
   }
+
+  setTimeout(()=>{
+    location.replace("./login.html");
+  }, 300);
+}
 
   (function guard(){
     const s = getSession();
