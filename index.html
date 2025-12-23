@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DIGIY FRET — Chauffeur</title>
+  <title>DIGIY FRET — Connexion Chauffeur</title>
   <meta name="theme-color" content="#0ea5e9" />
-  <meta name="description" content="DIGIY FRET Chauffeur — missions, statut, encaissement. 0% commission." />
+  <meta name="description" content="Connexion chauffeur DIGIY FRET par PIN sécurisé. 0% commission." />
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,137 +14,84 @@
       --bg1:#f7fbff;--bg2:#fff7ed;--card:#fff;
       --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.08);
       --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
-      --radius:18px;--shadow:0 10px 25px rgba(0,0,0,.08);
+      --radius:20px;--shadow:0 14px 30px rgba(0,0,0,.10);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
+    body{
+      margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
       background:
-        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.20), transparent 55%),
-        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.16), transparent 55%),
+        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.22), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.18), transparent 55%),
         linear-gradient(180deg,var(--bg1),var(--bg2));
     }
-    .wrap{max-width:1100px;margin:auto;padding:16px}
-    .topbar{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-      background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;
-      padding:14px;box-shadow:var(--shadow);backdrop-filter: blur(10px);
-      position:sticky;top:10px;z-index:5;
-    }
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:44px;height:44px;border-radius:14px;
-      background:linear-gradient(135deg,var(--sky),var(--gold));
-      display:flex;align-items:center;justify-content:center;font-weight:900
-    }
-    .btn{
-      padding:10px 12px;border-radius:14px;border:1px solid var(--line);
-      background:#fff;font-weight:900;cursor:pointer
-    }
-    .btn.primary{background:#e0f2fe;border-color:#7dd3fc}
-    .btn.gold{background:#fff7ed;border-color:#fed7aa}
-    .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
-    .grid{margin-top:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
-      background:rgba(255,255,255,.86);border:1px solid var(--line);
-      border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter: blur(10px);
+      width:100%;max-width:420px;
+      background:rgba(255,255,255,.92);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+      backdrop-filter: blur(10px);
     }
-    .hd{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .bd{padding:14px}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;border:1px solid var(--line);font-weight:900;background:#fff
+    .logo{
+      width:64px;height:64px;border-radius:20px;
+      background:linear-gradient(135deg,var(--sky),var(--gold));
+      display:grid;place-items:center;
+      font-size:30px;font-weight:900;margin:auto;
+      box-shadow:0 10px 22px rgba(0,0,0,.18);
     }
-    .dot{width:10px;height:10px;border-radius:50%}
-    .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--gold)}
-    .job{
-      border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff
+    h1{text-align:center;margin:14px 0 6px 0;font-size:20px}
+    p{text-align:center;margin:0 0 18px 0;color:var(--muted);font-weight:700}
+    label{display:block;font-size:13px;font-weight:800;margin:14px 0 6px}
+    input{
+      width:100%;padding:14px;border-radius:14px;
+      border:1px solid var(--line);font-size:16px;font-weight:800;
+      outline:none;
     }
-    .job h3{margin:0;font-size:14px}
-    .chip{
-      display:inline-block;padding:6px 10px;border-radius:999px;
-      background:#f1f5f9;font-weight:900;font-size:12px;margin:6px 6px 0 0
+    input:focus{border-color:#7dd3fc}
+    .btn{
+      width:100%;margin-top:18px;padding:14px;
+      border:none;border-radius:16px;
+      background:linear-gradient(135deg,var(--sky),var(--gold));
+      color:#000;font-weight:900;font-size:16px;
+      cursor:pointer;
+      box-shadow:0 12px 24px rgba(14,165,233,.35);
     }
-    .mini{
-      padding:9px 10px;border-radius:12px;border:1px solid var(--line);
-      background:#fff;font-weight:900;cursor:pointer;margin:8px 8px 0 0
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .msg{
+      margin-top:14px;padding:10px 12px;border-radius:14px;
+      font-size:13px;font-weight:800;text-align:center;
+      display:none;
     }
-    .mini.primary{background:#e0f2fe;border-color:#7dd3fc}
-    .mini.ok{background:#dcfce7;border-color:#bbf7d0}
-    .mini.bad{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
-    .notice{
-      margin-top:10px;padding:10px 12px;border-radius:14px;
-      background:#f8fafc;border:1px dashed rgba(0,0,0,.18);
-      font-size:13px;color:var(--muted);font-weight:750
+    .msg.ok{background:#dcfce7;color:#065f46}
+    .msg.bad{background:#fff1f2;color:#8a1010}
+    .foot{
+      margin-top:18px;text-align:center;font-size:12px;
+      color:var(--muted);font-weight:800
     }
-    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:520px){.kpi{grid-template-columns:1fr}}
-    .box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-    .box b{display:block;font-size:12px}
-    .box span{display:block;margin-top:6px;color:var(--muted);font-weight:800}
   </style>
 </head>
 
 <body>
-<div class="wrap">
 
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">🚚</div>
-      <div>
-        <b>DIGIY FRET — Chauffeur</b><br>
-        <small id="subline">0% commission • terrain first</small>
-      </div>
-    </div>
+<div class="card">
+  <div class="logo">🚚</div>
+  <h1>DIGIY FRET</h1>
+  <p>Connexion Chauffeur • PIN sécurisé</p>
 
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn primary" id="btnRefresh">↻ Actualiser</button>
-      <button class="btn gold" id="btnToggleDispo">⚡ Dispo</button>
-      <button class="btn danger" id="btnLogout">Déco</button>
-    </div>
-  </div>
+  <label>📱 Numéro de téléphone</label>
+  <input id="phone" placeholder="+221771234567" inputmode="tel" />
 
-  <div class="grid">
-    <div class="card">
-      <div class="hd">
-        <div>
-          <b>📦 Mes missions</b><br>
-          <small style="color:var(--muted);font-weight:750">Demandes FRET (assignées ou disponibles)</small>
-        </div>
-        <div class="pill">
-          <span class="dot" id="dotConn"></span>
-          <span id="connLabel">…</span>
-        </div>
-      </div>
-      <div class="bd" id="jobs"></div>
-      <div class="bd" style="padding-top:0">
-        <div class="notice" id="emptyNotice" style="display:none;">Aucune mission pour l’instant. Reste dispo, ça va tomber. 🔥</div>
-      </div>
-    </div>
+  <label>🔐 PIN</label>
+  <input id="pin" placeholder="••••" inputmode="numeric" type="password" />
 
-    <div class="card">
-      <div class="hd">
-        <div>
-          <b>🧾 Tableau chauffeur</b><br>
-          <small style="color:var(--muted);font-weight:750" id="phoneLabel">📱 —</small>
-        </div>
-        <div class="pill">
-          <span class="dot warn" id="dotDispo"></span>
-          <span id="dispoLabel">…</span>
-        </div>
-      </div>
-      <div class="bd">
-        <div class="kpi">
-          <div class="box"><b>Solde du jour</b><span id="kpiToday">—</span></div>
-          <div class="box"><b>Missions (7 jours)</b><span id="kpiWeek">—</span></div>
-          <div class="box"><b>Note / fiabilité</b><span id="kpiRating">—</span></div>
-          <div class="box"><b>Dernière activité</b><span id="kpiLast">—</span></div>
-        </div>
-        <div class="notice" id="log">Prêt. 🚀</div>
-      </div>
-    </div>
-  </div>
+  <button class="btn" id="btnLogin">Connexion</button>
 
+  <div class="msg ok" id="msgOk">Connexion réussie…</div>
+  <div class="msg bad" id="msgBad">Erreur</div>
+
+  <div class="foot">0% commission • DIGIYLYFE 🦅</div>
 </div>
 
 <script>
@@ -153,432 +100,65 @@ const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-window.__supabase ||= window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const sb = window.__supabase;
-
-/* ROUTES */
-const ROUTES = { LOGIN: "./login.html" };
-
-/* TABLES (schéma national) */
-const T = {
-  DRIVERS: "freight_drivers",
-  REQUESTS: "freight_requests",
-  TRIPS: "freight_trips"
-};
-
-/* STATE */
-let currentUser = null;
-let driverPhone = "—";
-let dispo = true;
-let driverCityId = null;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* UI */
-const $ = (id)=>document.getElementById(id);
-const jobsEl = $("jobs");
-const emptyNotice = $("emptyNotice");
-const logEl = $("log");
+const $ = id => document.getElementById(id);
+const btn = $("btnLogin");
+const ok = $("msgOk");
+const bad = $("msgBad");
 
-function log(msg){ logEl.textContent = msg; }
-function money(x){ return Number(x||0).toLocaleString("fr-FR") + " F CFA"; }
-function fmtDate(iso){
-  try{
-    if(!iso) return "—";
-    const d = new Date(iso);
-    return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  }catch(e){ return "—"; }
+function show(el,msg){
+  el.textContent = msg;
+  el.style.display = "block";
 }
-function normalizePhoneDisplay(phone){
-  if(!phone) return "—";
-  let p = String(phone).trim().replace(/[^\d+]/g, "");
-  if (/^\d{11,15}$/.test(p) && !p.startsWith("+")) p = "+" + p;
-  if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
+function hide(){ ok.style.display="none"; bad.style.display="none"; }
+
+function normalizePhone(p){
+  if(!p) return "";
+  p = p.replace(/[^\d+]/g,"");
+  if(/^0\d+/.test(p)) p = "+221" + p.slice(1);
+  if(!p.startsWith("+")) p = "+" + p;
   return p;
 }
-function setConn(ok,label){
-  const dot = $("dotConn");
-  dot.classList.remove("ok","bad");
-  dot.classList.add(ok ? "ok":"bad");
-  $("connLabel").textContent = label;
-}
-function setDispoUI(isOn){
-  dispo = !!isOn;
-  const dot = $("dotDispo");
-  dot.classList.remove("ok","warn");
-  dot.classList.add(dispo ? "ok":"warn");
-  $("dispoLabel").textContent = dispo ? "DISPO ✅" : "PAUSE ⏸️";
-  $("btnToggleDispo").textContent = dispo ? "⚡ Dispo" : "⏸️ Pause";
-}
 
-/* STATUS mapping (schéma national) */
-function niceStatus(s){
-  const v = String(s||"").toLowerCase();
-  if(v==="new") return ["NOUVELLE","#f1f5f9"];
-  if(v==="priced") return ["TARIFÉE","#e0f2fe"];
-  if(v==="searching") return ["RECHERCHE","#e0f2fe"];
-  if(v==="assigned") return ["ASSIGNÉE","#fff7ed"];
-  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
-  if(v==="picked_up") return ["COLLECTÉE","#fff7ed"];
-  if(v==="in_transit") return ["EN ROUTE","#fff7ed"];
-  if(v==="delivered") return ["LIVRÉE","#dcfce7"];
-  if(v==="cancelled") return ["ANNULÉE","#fff1f2"];
-  if(v==="expired") return ["EXPIRÉE","#fff1f2"];
-  return [String(s||"—").toUpperCase(),"#f1f5f9"];
-}
+btn.addEventListener("click", async ()=>{
+  hide();
+  btn.disabled = true;
 
-function jobCard(r){
-  const [st,bg] = niceStatus(r.status);
-  const id = r.id || "—";
+  const phone = normalizePhone($("phone").value);
+  const pin = $("pin").value.trim();
 
-  const pickup = r.pickup_address || "Pickup —";
-  const dropoff = r.dropoff_address || "Dropoff —";
-  const cargo = r.item_type || "Marchandise";
-  const vol = r.volume || "S";
-
-  const price = (r.final_price_xof ?? r.quoted_price_xof ?? 0);
-
-  // boutons selon status
-  const s = String(r.status||"").toLowerCase();
-  const canAccept = (s==="priced" || s==="searching" || s==="assigned") && (!r.assigned_driver_phone || r.assigned_driver_phone===driverPhone);
-  const canPickup = (s==="accepted");
-  const canTransit = (s==="picked_up");
-  const canDone = (s==="in_transit");
-
-  return `
-    <div class="job" data-id="${id}">
-      <h3>🚚 Demande ${id.slice(0,8).toUpperCase()}</h3>
-      <div class="chip" style="background:${bg}">🧾 ${st}</div>
-      <div class="chip">🕒 ${fmtDate(r.created_at)}</div>
-      <div class="chip">📍 ${pickup} → ${dropoff}</div>
-      <div class="chip">📦 ${cargo}</div>
-      <div class="chip">Vol ${vol}</div>
-      <div class="chip">💰 ${money(price)}</div>
-
-      <div>
-        ${canAccept ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
-        ${canPickup ? `<button class="mini ok" data-act="pickup">📦 Pickup</button>` : ``}
-        ${canTransit ? `<button class="mini ok" data-act="transit">🚚 En transit</button>` : ``}
-        ${canDone ? `<button class="mini ok" data-act="done">✅ Livré</button>` : ``}
-        <button class="mini bad" data-act="cancel">✖ Annuler</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderJobs(list){
-  jobsEl.innerHTML = "";
-  emptyNotice.style.display = list.length ? "none" : "block";
-  list.forEach(r=> jobsEl.insertAdjacentHTML("beforeend", jobCard(r)));
-}
-
-/* Helpers */
-function startOfToday(){
-  const d = new Date();
-  d.setHours(0,0,0,0);
-  return d;
-}
-function daysAgo(n){
-  const d = new Date(Date.now() - n*24*3600*1000);
-  return d;
-}
-
-async function upsertDriver(){
-  // phone-first, on garde is_online + last_seen_at + city_id si déjà connu
-  try{
-    const payload = {
-      phone: driverPhone,
-      is_online: dispo,
-      last_seen_at: new Date().toISOString(),
-      city_id: driverCityId
-    };
-    const { error } = await sb.from(T.DRIVERS).upsert(payload, { onConflict: "phone" });
-    if(error) throw error;
-  }catch(e){
-    // si RLS ou table absente => on ignore sans casser la page
+  if(phone.length < 10 || pin.length < 3){
+    show(bad,"Numéro ou PIN invalide");
+    btn.disabled = false;
+    return;
   }
-}
 
-async function loadDriver(){
   try{
-    const { data, error } = await sb
-      .from(T.DRIVERS)
-      .select("phone,is_online,rating,last_seen_at,city_id")
-      .eq("phone", driverPhone)
-      .maybeSingle();
+    const { data, error } = await sb.rpc("rpc_driver_login", {
+      p_phone: phone,
+      p_pin: pin
+    });
+
     if(error) throw error;
 
-    if(data){
-      if(typeof data.is_online === "boolean") setDispoUI(data.is_online);
-      $("kpiRating").textContent = (data.rating != null) ? (Number(data.rating).toFixed(1) + " / 5") : "—";
-      $("kpiLast").textContent = data.last_seen_at ? fmtDate(data.last_seen_at) : "—";
-      driverCityId = data.city_id || null;
-    }else{
-      $("kpiRating").textContent = "—";
-      $("kpiLast").textContent = "—";
-    }
+    // stocke token court
+    localStorage.setItem("digiy_fret_driver_token", data.token);
+    localStorage.setItem("digiy_fret_driver_phone", phone);
+
+    show(ok,"Connexion réussie ✅");
+    setTimeout(()=>{
+      location.href = "./chauffeur.html";
+    }, 700);
+
   }catch(e){
-    // silent
+    show(bad,"PIN incorrect ou chauffeur inconnu ❌");
+  }finally{
+    btn.disabled = false;
   }
-}
-
-async function ensureDriverCity(){
-  // Si le driver n’a pas city_id, on essaie de le déduire depuis la dernière demande assignée
-  if(driverCityId) return;
-  try{
-    const { data, error } = await sb
-      .from(T.REQUESTS)
-      .select("city_id")
-      .eq("assigned_driver_phone", driverPhone)
-      .order("created_at",{ascending:false})
-      .limit(1);
-    if(error) throw error;
-    const cid = data?.[0]?.city_id || null;
-    if(cid){
-      driverCityId = cid;
-      await upsertDriver();
-    }
-  }catch(e){}
-}
-
-async function loadRequests(){
-  log("Chargement des demandes…");
-
-  // 1) Mes demandes assignées
-  // 2) Si dispo + city_id connu => demandes "searching/priced" de la ville
-  try{
-    let list = [];
-
-    // assignées
-    const a = await sb
-      .from(T.REQUESTS)
-      .select("*")
-      .eq("assigned_driver_phone", driverPhone)
-      .order("created_at",{ascending:false})
-      .limit(50);
-
-    if(a.error) throw a.error;
-    list = (a.data || []);
-
-    // disponibles (si dispo)
-    if(dispo){
-      await ensureDriverCity();
-      if(driverCityId){
-        const b = await sb
-          .from(T.REQUESTS)
-          .select("*")
-          .eq("city_id", driverCityId)
-          .in("status", ["priced","searching"])
-          .order("created_at",{ascending:false})
-          .limit(50);
-        if(!b.error && Array.isArray(b.data)){
-          // merge sans doublons
-          const map = new Map(list.map(x=>[x.id,x]));
-          b.data.forEach(x=>{ if(!map.has(x.id)) map.set(x.id,x); });
-          list = Array.from(map.values());
-        }
-      }
-    }
-
-    renderJobs(list);
-
-    // KPI semaine
-    const start7 = daysAgo(7).getTime();
-    const weekCount = list.filter(r => new Date(r.created_at).getTime() >= start7).length;
-    $("kpiWeek").textContent = String(weekCount);
-
-    // KPI today = somme livrée aujourd’hui
-    const today0 = startOfToday().getTime();
-    const sumToday = list
-      .filter(r => new Date(r.created_at).getTime() >= today0 && String(r.status).toLowerCase()==="delivered")
-      .reduce((s,r)=> s + Number(r.final_price_xof ?? r.quoted_price_xof ?? 0), 0);
-    $("kpiToday").textContent = money(sumToday);
-
-    log("OK ✅");
-  }catch(e){
-    renderJobs([]);
-    log("Erreur chargement (table/RLS?) ❗");
-  }
-}
-
-/* Actions statut */
-async function createOrUpdateTripForRequest(requestId, tripStatus){
-  // On crée une ligne freight_trips si absente, sinon update status
-  try{
-    const existing = await sb
-      .from(T.TRIPS)
-      .select("id,status")
-      .eq("request_id", requestId)
-      .eq("driver_phone", driverPhone)
-      .order("created_at",{ascending:false})
-      .limit(1);
-
-    if(existing.error) throw existing.error;
-
-    const row = existing.data?.[0];
-
-    if(!row){
-      const ins = await sb.from(T.TRIPS).insert([{
-        request_id: requestId,
-        driver_phone: driverPhone,
-        status: tripStatus
-      }]);
-      if(ins.error) throw ins.error;
-    }else{
-      const upd = await sb.from(T.TRIPS).update({ status: tripStatus }).eq("id", row.id);
-      if(upd.error) throw upd.error;
-    }
-  }catch(e){
-    // pas bloquant
-  }
-}
-
-async function updateRequestStatus(requestId, newStatus, extra={}){
-  try{
-    const payload = Object.assign({ status: newStatus }, extra);
-    const { error } = await sb.from(T.REQUESTS).update(payload).eq("id", requestId);
-    if(error) throw error;
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-async function actAccept(requestId){
-  log("Acceptation…");
-  // lock : on assigne le phone + status accepted + accepted_at
-  const ok = await updateRequestStatus(requestId, "accepted", {
-    assigned_driver_phone: driverPhone,
-    accepted_at: new Date().toISOString()
-  });
-  if(!ok){ log("Impossible d’accepter (RLS/colonnes) ❗"); return; }
-
-  await createOrUpdateTripForRequest(requestId, "accepted");
-  log("Accepté ✅");
-  await loadRequests();
-}
-
-async function actPickup(requestId){
-  log("Pickup…");
-  const ok = await updateRequestStatus(requestId, "picked_up", { picked_up_at: new Date().toISOString() });
-  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
-
-  await createOrUpdateTripForRequest(requestId, "picked_up");
-  log("Pickup OK ✅");
-  await loadRequests();
-}
-
-async function actTransit(requestId){
-  log("Mise en transit…");
-  const ok = await updateRequestStatus(requestId, "in_transit");
-  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
-
-  await createOrUpdateTripForRequest(requestId, "in_transit");
-  log("En route ✅");
-  await loadRequests();
-}
-
-async function actDone(requestId){
-  log("Livraison…");
-  const ok = await updateRequestStatus(requestId, "delivered", { delivered_at: new Date().toISOString() });
-  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
-
-  await createOrUpdateTripForRequest(requestId, "delivered");
-  log("Livré ✅");
-  await loadRequests();
-}
-
-async function actCancel(requestId){
-  const reason = prompt("Raison annulation ? (court)");
-  log("Annulation…");
-  const ok = await updateRequestStatus(requestId, "cancelled", { cancelled_reason: reason || "cancelled" });
-  if(!ok){ log("Impossible (RLS/colonnes) ❗"); return; }
-
-  await createOrUpdateTripForRequest(requestId, "cancelled");
-  log("Annulé ✅");
-  await loadRequests();
-}
-
-/* GUARD (auth ou phone local) */
-function getLocalDriverPhone(){
-  // tu peux aussi stocker ici un PIN-session si tu veux
-  const p =
-    localStorage.getItem("digiy_fret_driver_phone") ||
-    localStorage.getItem("digiy_driver_phone") ||
-    "";
-  return normalizePhoneDisplay(p);
-}
-
-async function guard(){
-  // 1) si session Supabase existe => OK
-  // 2) sinon => fallback phone local ; si pas => login
-  try{
-    const { data } = await sb.auth.getSession();
-    const session = data?.session;
-
-    if(session){
-      currentUser = session.user;
-      driverPhone = normalizePhoneDisplay(
-        currentUser.phone || currentUser.user_metadata?.phone || getLocalDriverPhone()
-      );
-    }else{
-      driverPhone = getLocalDriverPhone();
-    }
-
-    if(!driverPhone || driverPhone==="—"){
-      location.href = ROUTES.LOGIN;
-      return;
-    }
-
-    $("phoneLabel").textContent = "📱 " + driverPhone;
-    setConn(true, "Connecté");
-    setDispoUI(true);
-
-    await loadDriver();
-    await upsertDriver();
-    await loadRequests();
-  }catch(e){
-    setConn(false, "Hors ligne");
-    location.href = ROUTES.LOGIN;
-  }
-}
-
-/* EVENTS */
-$("btnRefresh").addEventListener("click", loadRequests);
-
-$("btnToggleDispo").addEventListener("click", async ()=>{
-  setDispoUI(!dispo);
-  log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
-  await upsertDriver();
-  await loadRequests();
 });
-
-$("btnLogout").addEventListener("click", async ()=>{
-  try{ await sb.auth.signOut(); }catch(e){}
-  // on nettoie aussi le fallback local
-  try{
-    localStorage.removeItem("digiy_fret_driver_phone");
-    localStorage.removeItem("digiy_driver_phone");
-  }catch(e){}
-  location.href = ROUTES.LOGIN;
-});
-
-$("jobs").addEventListener("click", async (e)=>{
-  const btn = e.target.closest("button");
-  if(!btn) return;
-
-  const card = e.target.closest(".job");
-  const requestId = card?.dataset?.id;
-  const act = btn.dataset.act;
-  if(!requestId) return;
-
-  if(act==="accept") return actAccept(requestId);
-  if(act==="pickup") return actPickup(requestId);
-  if(act==="transit") return actTransit(requestId);
-  if(act==="done") return actDone(requestId);
-  if(act==="cancel") return actCancel(requestId);
-});
-
-/* START */
-guard();
 </script>
+
 </body>
 </html>
