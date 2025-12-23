@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY FRET — Chauffeur (Accepter / En route)</title>
+  <meta name="theme-color" content="#16a34a" />
+
+  <style>
+    :root{
+      --bg:#f7fbf8; --card:#ffffff; --line:rgba(2,6,23,.12);
+      --text:#0f172a; --muted:#475569;
+      --green:#16a34a; --blue:#0ea5e9; --gold:#facc15; --danger:#ef4444;
+      --r:18px; --sh:0 14px 32px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:920px;margin:0 auto;padding:16px}
+    header{padding:18px 0 10px}
+    .brand{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+    .left{display:flex;align-items:center;gap:10px}
+    .logo{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-weight:1000;
+      background:linear-gradient(135deg,var(--gold),#f97316);color:#111827;box-shadow:0 12px 26px rgba(250,204,21,.25)}
+    h1{margin:0;font-size:18px;font-weight:1000}
+    .sub{margin:4px 0 0;color:var(--muted);font-weight:700;font-size:13px}
+    .right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;font-weight:1000;font-size:12px;border:1px solid rgba(2,6,23,.12);background:rgba(255,255,255,.7)}
+    .ok{color:var(--green)} .bad{color:var(--danger)} .muted{color:var(--muted)}
+    .btn{border:none;border-radius:14px;padding:10px 12px;font-weight:1000;cursor:pointer}
+    .ghost{background:transparent;border:1px solid rgba(2,6,23,.18);color:var(--text)}
+    .primary{background:var(--green);color:#fff}
+    .info{background:var(--blue);color:#fff}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:14px;margin-top:14px}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    label{display:block;font-size:12px;color:var(--muted);font-weight:900;margin:0 0 6px}
+    input{
+      width:260px;max-width:100%;
+      padding:12px 12px;border:1px solid rgba(2,6,23,.14);
+      border-radius:14px;font-size:14px;font-weight:900;outline:none
+    }
+    input:focus{border-color:rgba(22,163,74,.55);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .order{
+      border:1px solid rgba(2,6,23,.12);
+      border-radius:16px;padding:12px;background:rgba(255,255,255,.85)
+    }
+    .orderHead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+    .id{font-weight:1100}
+    .meta{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{padding:6px 10px;border-radius:999px;font-weight:1000;font-size:12px;border:1px solid rgba(2,6,23,.12);background:#fff}
+    .tagGreen{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.08);color:var(--green)}
+    .tagBlue{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.08);color:var(--blue)}
+    .tagGray{border-color:rgba(71,85,105,.25);background:rgba(71,85,105,.06);color:var(--muted)}
+    .tagRed{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:var(--danger)}
+    .cols{display:grid;grid-template-columns:1.2fr 1.2fr 1fr;gap:10px;margin-top:10px}
+    @media(max-width:820px){.cols{grid-template-columns:1fr}}
+    .k{font-size:12px;color:var(--muted);font-weight:900}
+    .v{font-size:14px;font-weight:1100}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .a{border:none;border-radius:12px;padding:10px 12px;font-weight:1100;cursor:pointer}
+    .aAccept{background:var(--green);color:#fff}
+    .aRoute{background:var(--blue);color:#fff}
+    .aPin{background:#111827;color:#fff}
+    .aCall{background:transparent;border:1px solid rgba(2,6,23,.18)}
+    .empty{padding:14px;border:1px dashed rgba(2,6,23,.18);border-radius:16px;color:var(--muted);font-weight:900;background:rgba(255,255,255,.7)}
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="left">
+        <div class="logo">∞</div>
+        <div>
+          <h1>Chauffeur — Accepter / En route</h1>
+          <div class="sub">2 boutons. Terrain first. Zéro cinéma.</div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div id="line" class="pill muted">⏳ Préparation…</div>
+        <button class="btn ghost" id="btnRefresh">Rafraîchir</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <label>Mon téléphone chauffeur (1 fois)</label>
+        <input id="driverPhone" placeholder="+22177..." />
+      </div>
+      <button class="btn primary" id="btnSave">Enregistrer</button>
+      <button class="btn ghost" id="btnClear">Effacer</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pill muted">📦 Mes commandes assignées</div>
+    <div id="list" class="list"></div>
+  </div>
+</div>
+
+<script>
+/* 🔐 SUPABASE — DÉJÀ POSÉ */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.Wm3b1yqR4c7o3a3o4lP0d2m0qYp9b0oQ1yq0y0y0y0y0";
+
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+s.onload = boot;
+document.head.appendChild(s);
+
+function setLine(type, txt){
+  const el = document.getElementById("line");
+  el.className = "pill " + (type==="ok" ? "ok" : type==="bad" ? "bad" : "muted");
+  el.textContent = txt;
+}
+
+function getSession(){
+  try{
+    const token = localStorage.getItem("digiy_fret_driver_token");
+    const exp = localStorage.getItem("digiy_fret_driver_expires");
+    if(!token || !exp) return null;
+    if(Date.now() >= new Date(exp).getTime()) return null;
+    return { token };
+  }catch(e){ return null; }
+}
+
+function fmtPlace(city, area){
+  return [city, area].filter(Boolean).join(" • ") || "—";
+}
+function tagForStatus(st){
+  if(st==="new") return ["Nouveau","tagGray"];
+  if(st==="accepted") return ["Accepté","tagGreen"];
+  if(st==="onroute") return ["En route","tagBlue"];
+  if(st==="delivered") return ["Livré","tagGreen"];
+  if(st==="cancelled") return ["Annulé","tagRed"];
+  return [st||"—","tagGray"];
+}
+
+let supabase, DRIVER_PHONE = null;
+
+function boot(){
+  const session = getSession();
+  if(!session){
+    setLine("bad","⛔ Session chauffeur expirée.");
+    return;
+  }
+
+  supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    { global:{ headers:{ Authorization:"Bearer "+session.token } } }
+  );
+
+  const saved = localStorage.getItem("digiy_fret_driver_phone") || "";
+  const inp = document.getElementById("driverPhone");
+  inp.value = saved;
+  DRIVER_PHONE = saved || null;
+
+  document.getElementById("btnSave").onclick = () => {
+    const v = inp.value.trim();
+    if(!v){ alert("Mets ton numéro chauffeur."); return; }
+    localStorage.setItem("digiy_fret_driver_phone", v);
+    DRIVER_PHONE = v;
+    load();
+  };
+
+  document.getElementById("btnClear").onclick = () => {
+    localStorage.removeItem("digiy_fret_driver_phone");
+    inp.value = "";
+    DRIVER_PHONE = null;
+    document.getElementById("list").innerHTML = "";
+    setLine("muted","📌 Mets ton téléphone pour voir tes commandes.");
+  };
+
+  document.getElementById("btnRefresh").onclick = load;
+
+  if(DRIVER_PHONE){
+    load();
+  }else{
+    setLine("muted","📌 Mets ton téléphone pour voir tes commandes.");
+  }
+}
+
+async function load(){
+  if(!DRIVER_PHONE){
+    setLine("muted","📌 Mets ton téléphone pour voir tes commandes.");
+    return;
+  }
+
+  setLine("muted","⏳ Chargement…");
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  const { data, error } = await supabase
+    .from("fret_orders")
+    .select("id, created_at, status, client_phone, driver_phone, pickup_city, pickup_area, drop_city, drop_area, price_xof")
+    .eq("driver_phone", DRIVER_PHONE)
+    .order("created_at", { ascending:false })
+    .limit(50);
+
+  if(error){
+    setLine("bad","⛔ " + error.message);
+    return;
+  }
+
+  if(!data || data.length===0){
+    setLine("ok","✅ Aucun job assigné pour l’instant.");
+    list.innerHTML = `<div class="empty">Aucune commande assignée. Attends ou rafraîchis.</div>`;
+    return;
+  }
+
+  setLine("ok","✅ " + data.length + " commande(s).");
+
+  data.forEach(o => list.appendChild(renderOrder(o)));
+}
+
+function renderOrder(o){
+  const card = document.createElement("div");
+  card.className = "order";
+
+  const [lbl, cls] = tagForStatus(o.status);
+
+  const shortId = (o.id||"").slice(0,8);
+  const price = (o.price_xof!=null) ? (o.price_xof + " F CFA") : "—";
+
+  card.innerHTML = `
+    <div class="orderHead">
+      <div class="id">#${shortId}</div>
+      <div class="meta">
+        <span class="tag ${cls}">${lbl}</span>
+        <span class="tag tagGray">${price}</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <div class="k">Départ</div>
+        <div class="v">${fmtPlace(o.pickup_city, o.pickup_area)}</div>
+      </div>
+      <div>
+        <div class="k">Arrivée</div>
+        <div class="v">${fmtPlace(o.drop_city, o.drop_area)}</div>
+      </div>
+      <div>
+        <div class="k">Client</div>
+        <div class="v">${o.client_phone || "—"}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="a aAccept">Accepter</button>
+      <button class="a aRoute">En route</button>
+      <button class="a aPin">Livrer (PIN)</button>
+      <button class="a aCall">Appeler client</button>
+    </div>
+  `;
+
+  const btnAccept = card.querySelector(".aAccept");
+  const btnRoute  = card.querySelector(".aRoute");
+  const btnPin    = card.querySelector(".aPin");
+  const btnCall   = card.querySelector(".aCall");
+
+  btnAccept.onclick = () => updateStatus(o.id, "accepted");
+  btnRoute.onclick  = () => updateStatus(o.id, "onroute");
+  btnPin.onclick    = () => location.href = "chauffeur-pin.html?id=" + encodeURIComponent(o.id);
+  btnCall.onclick   = () => {
+    if(!o.client_phone){ alert("Client sans téléphone."); return; }
+    location.href = "tel:" + o.client_phone;
+  };
+
+  // garde-fous
+  if(o.status === "delivered" || o.status === "cancelled"){
+    btnAccept.disabled = true;
+    btnRoute.disabled = true;
+  }
+
+  return card;
+}
+
+async function updateStatus(orderId, nextStatus){
+  setLine("muted","⏳ Mise à jour " + nextStatus + "…");
+
+  const { error } = await supabase
+    .from("fret_orders")
+    .update({ status: nextStatus })
+    .eq("id", orderId);
+
+  if(error){
+    setLine("bad","⛔ " + error.message);
+    return;
+  }
+
+  setLine("ok","✅ Statut mis à jour: " + nextStatus);
+  load();
+}
+</script>
+
+</body>
+</html>
