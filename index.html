@@ -3,162 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DIGIY FRET — Connexion Chauffeur</title>
+  <title>DIGIY FRET — Chauffeur</title>
   <meta name="theme-color" content="#0ea5e9" />
-  <meta name="description" content="Connexion chauffeur DIGIY FRET par PIN sécurisé. 0% commission." />
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 🔐 TOKEN GUARD -->
+  <script>
+  function getSession(){
+    try{
+      const token = localStorage.getItem("digiy_fret_driver_token");
+      const exp = localStorage.getItem("digiy_fret_driver_expires");
+      if(!token || !exp) return null;
+      return { token, exp: new Date(exp) };
+    }catch(e){ return null; }
+  }
+  function isExpired(exp){ return Date.now() >= exp.getTime(); }
+  function logout(reason){
+    try{
+      localStorage.removeItem("digiy_fret_driver_token");
+      localStorage.removeItem("digiy_fret_driver_expires");
+      localStorage.removeItem("digiy_fret_driver_phone");
+    }catch(e){}
+    if(reason) alert(reason);
+    location.replace("./login.html");
+  }
+  (function(){
+    const s = getSession();
+    if(!s) return logout("Veuillez vous reconnecter");
+    if(isExpired(s.exp)) return logout("Session expirée");
+  })();
+  </script>
 
   <style>
-    :root{
-      --bg1:#f7fbff;--bg2:#fff7ed;--card:#fff;
-      --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.08);
-      --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
-      --radius:20px;--shadow:0 14px 30px rgba(0,0,0,.10);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:system-ui,Arial,sans-serif;color:var(--text);
-      min-height:100vh;display:flex;align-items:center;justify-content:center;
-      background:
-        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.22), transparent 55%),
-        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.18), transparent 55%),
-        linear-gradient(180deg,var(--bg1),var(--bg2));
-    }
-    .card{
-      width:100%;max-width:420px;
-      background:rgba(255,255,255,.92);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:22px;
-      backdrop-filter: blur(10px);
-    }
-    .logo{
-      width:64px;height:64px;border-radius:20px;
-      background:linear-gradient(135deg,var(--sky),var(--gold));
-      display:grid;place-items:center;
-      font-size:30px;font-weight:900;margin:auto;
-      box-shadow:0 10px 22px rgba(0,0,0,.18);
-    }
-    h1{text-align:center;margin:14px 0 6px 0;font-size:20px}
-    p{text-align:center;margin:0 0 18px 0;color:var(--muted);font-weight:700}
-    label{display:block;font-size:13px;font-weight:800;margin:14px 0 6px}
-    input{
-      width:100%;padding:14px;border-radius:14px;
-      border:1px solid var(--line);font-size:16px;font-weight:800;
-      outline:none;
-    }
-    input:focus{border-color:#7dd3fc}
-    .btn{
-      width:100%;margin-top:18px;padding:14px;
-      border:none;border-radius:16px;
-      background:linear-gradient(135deg,var(--sky),var(--gold));
-      color:#000;font-weight:900;font-size:16px;
-      cursor:pointer;
-      box-shadow:0 12px 24px rgba(14,165,233,.35);
-    }
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .msg{
-      margin-top:14px;padding:10px 12px;border-radius:14px;
-      font-size:13px;font-weight:800;text-align:center;
-      display:none;
-    }
-    .msg.ok{background:#dcfce7;color:#065f46}
-    .msg.bad{background:#fff1f2;color:#8a1010}
-    .foot{
-      margin-top:18px;text-align:center;font-size:12px;
-      color:var(--muted);font-weight:800
-    }
+    body{margin:0;font-family:system-ui,Arial;background:#f7fbff;padding:18px}
+    .card{max-width:900px;margin:auto;background:#fff;border-radius:18px;padding:18px}
+    button{padding:10px 14px;border-radius:12px;border:0;background:#0ea5e9;color:#000;font-weight:900;cursor:pointer}
   </style>
 </head>
-
 <body>
-
-<div class="card">
-  <div class="logo">🚚</div>
-  <h1>DIGIY FRET</h1>
-  <p>Connexion Chauffeur • PIN sécurisé</p>
-
-  <label>📱 Numéro de téléphone</label>
-  <input id="phone" placeholder="+221771234567" inputmode="tel" />
-
-  <label>🔐 PIN</label>
-  <input id="pin" placeholder="••••" inputmode="numeric" type="password" />
-
-  <button class="btn" id="btnLogin">Connexion</button>
-
-  <div class="msg ok" id="msgOk">Connexion réussie…</div>
-  <div class="msg bad" id="msgBad">Erreur</div>
-
-  <div class="foot">0% commission • DIGIYLYFE 🦅</div>
-</div>
-
-<script>
-/* 🔐 SUPABASE */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* UI */
-const $ = id => document.getElementById(id);
-const btn = $("btnLogin");
-const ok = $("msgOk");
-const bad = $("msgBad");
-
-function show(el,msg){
-  el.textContent = msg;
-  el.style.display = "block";
-}
-function hide(){ ok.style.display="none"; bad.style.display="none"; }
-
-function normalizePhone(p){
-  if(!p) return "";
-  p = p.replace(/[^\d+]/g,"");
-  if(/^0\d+/.test(p)) p = "+221" + p.slice(1);
-  if(!p.startsWith("+")) p = "+" + p;
-  return p;
-}
-
-btn.addEventListener("click", async ()=>{
-  hide();
-  btn.disabled = true;
-
-  const phone = normalizePhone($("phone").value);
-  const pin = $("pin").value.trim();
-
-  if(phone.length < 10 || pin.length < 3){
-    show(bad,"Numéro ou PIN invalide");
-    btn.disabled = false;
-    return;
-  }
-
-  try{
-    const { data, error } = await sb.rpc("rpc_driver_login", {
-      p_phone: phone,
-      p_pin: pin
-    });
-
-    if(error) throw error;
-
-    // stocke token court
-    localStorage.setItem("digiy_fret_driver_token", data.token);
-    localStorage.setItem("digiy_fret_driver_phone", phone);
-
-    show(ok,"Connexion réussie ✅");
-    setTimeout(()=>{
-      location.href = "./chauffeur.html";
-    }, 700);
-
-  }catch(e){
-    show(bad,"PIN incorrect ou chauffeur inconnu ❌");
-  }finally{
-    btn.disabled = false;
-  }
-});
-</script>
-
+  <div class="card">
+    <h1>🚚 DIGIY FRET — Dashboard Chauffeur</h1>
+    <p>Session active.</p>
+    <button onclick="logout('Déconnexion')">Déconnexion</button>
+  </div>
 </body>
 </html>
+
