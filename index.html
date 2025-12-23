@@ -37,168 +37,327 @@
 
   <style>
     :root{
-      --bg:#f7fbff;--card:#fff;--line:rgba(0,0,0,.08);
+      --bg1:#f7fbff;--bg2:#fff7ed;--card:rgba(255,255,255,.92);
+      --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.10);
       --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
-      --muted:#5b6472;
+      --radius:18px;--shadow:0 12px 28px rgba(0,0,0,.10);
     }
     *{box-sizing:border-box}
     body{
-      margin:0;font-family:system-ui,Arial;
-      background:linear-gradient(180deg,#f7fbff,#fff7ed);
+      margin:0;min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.22), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.18), transparent 55%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
       padding:16px;
-      color:#0b1220;
     }
-    header{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      background:#fff;border:1px solid var(--line);
-      border-radius:18px;padding:14px 16px;margin-bottom:16px;
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+      background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;
+      padding:14px;box-shadow:var(--shadow);backdrop-filter: blur(10px);
+      position:sticky;top:10px;z-index:5;
     }
-    h1{margin:0;font-size:18px}
-    h2{margin:0 0 10px;font-size:16px}
-    button{
-      padding:10px 14px;border-radius:12px;
-      border:0;font-weight:900;cursor:pointer;
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background:linear-gradient(135deg,var(--sky),var(--gold));
+      display:flex;align-items:center;justify-content:center;font-weight:900
     }
-    .btn{background:#e0f2fe}
-    .btn.danger{background:#fee2e2}
-    .btn:active{transform:translateY(1px)}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    .card{
-      background:#fff;border:1px solid var(--line);
-      border-radius:18px;padding:14px;
+    .right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .btn{
+      padding:10px 12px;border-radius:14px;border:1px solid var(--line);
+      background:#fff;font-weight:900;cursor:pointer
     }
-    .muted{color:var(--muted);font-weight:750;font-size:13px}
-    .job{
-      border:1px solid var(--line);
-      border-radius:14px;padding:12px;margin-bottom:10px;background:#fff;
-    }
-    .job b{display:block}
-    .chip{
-      display:inline-block;margin-top:6px;margin-right:6px;
-      padding:6px 10px;border-radius:999px;
-      background:#f1f5f9;font-weight:900;font-size:12px;
-    }
-    .actions{margin-top:4px}
-    .actions button{margin-top:8px;margin-right:6px}
-    .actions .ok{background:#dcfce7}
-    .actions .bad{background:#fee2e2}
-    .topRight{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .btn.primary{background:#e0f2fe;border-color:#7dd3fc}
+    .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
     .pill{
-      display:inline-flex;gap:8px;align-items:center;
-      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
-      background:#fff;font-weight:900;font-size:13px;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;border:1px solid var(--line);font-weight:900;background:#fff
     }
     .dot{width:10px;height:10px;border-radius:50%}
-    .dot.ok{background:var(--ok)}
-    .dot.warn{background:var(--gold)}
+    .dot.ok{background:var(--ok)} .dot.warn{background:var(--gold)} .dot.bad{background:var(--bad)}
+    .grid{margin-top:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{
+      background:rgba(255,255,255,.86);border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter: blur(10px);
+    }
+    .hd{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .bd{padding:14px}
+    .muted{color:var(--muted);font-weight:750;font-size:13px}
+    .job{
+      border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff
+    }
+    .job h3{margin:0;font-size:14px}
+    .chip{
+      display:inline-block;padding:6px 10px;border-radius:999px;
+      background:#f1f5f9;font-weight:900;font-size:12px;margin:6px 6px 0 0
+    }
+    .mini{
+      padding:9px 10px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;font-weight:900;cursor:pointer;margin:8px 8px 0 0
+    }
+    .mini.primary{background:#e0f2fe;border-color:#7dd3fc}
+    .mini.ok{background:#dcfce7;border-color:#bbf7d0}
+    .mini.bad{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
+    .notice{
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      background:#f8fafc;border:1px dashed rgba(0,0,0,.18);
+      font-size:13px;color:var(--muted);font-weight:750
+    }
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:520px){.kpi{grid-template-columns:1fr}}
+    .box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+    .box b{display:block;font-size:12px}
+    .box span{display:block;margin-top:6px;color:var(--muted);font-weight:800}
   </style>
 </head>
 
 <body>
+<div class="wrap" style="max-width:1100px;margin:auto">
 
-<header>
-  <div>
-    <h1>🚚 DIGIY FRET — Chauffeur</h1>
-    <div class="muted" id="subline">—</div>
-  </div>
-  <div class="topRight">
-    <div class="pill">
-      <span class="dot" id="dotState"></span>
-      <span id="state">…</span>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🚚</div>
+      <div>
+        <b>DIGIY FRET — Chauffeur</b><br>
+        <small id="subline" class="muted">0% commission • terrain first</small>
+      </div>
     </div>
-    <button class="btn" id="btnRefresh">↻ Actualiser</button>
-    <button class="btn danger" onclick="logout('Déconnexion')">Déconnexion</button>
-  </div>
-</header>
 
-<div class="grid">
-  <!-- MISSIONS -->
-  <div class="card">
-    <h2>📦 Missions Fret</h2>
-    <div class="muted" style="margin-bottom:10px">Missions disponibles + tes missions en cours.</div>
-    <div id="jobs"></div>
+    <div class="right">
+      <button class="btn primary" id="btnRefresh">↻ Actualiser</button>
+      <button class="btn" id="btnToggleDispo">⚡ Dispo</button>
+      <button class="btn danger" id="btnLogout">Déco</button>
+      <div class="pill">
+        <span class="dot" id="dotConn"></span>
+        <span id="connLabel">…</span>
+      </div>
+    </div>
   </div>
 
-  <!-- PROFIL -->
-  <div class="card">
-    <h2>🧑‍✈️ Mon statut</h2>
-    <p><b>Téléphone :</b> <span id="phone"></span></p>
-    <p><b>État :</b> <span id="state2">…</span></p>
-    <button class="btn" id="btnToggle">Changer statut</button>
-    <div class="muted" style="margin-top:10px" id="log">Prêt.</div>
+  <div class="grid">
+    <div class="card">
+      <div class="hd">
+        <div>
+          <b>📦 Missions fret</b><br>
+          <small class="muted">Disponibles + tes missions</small>
+        </div>
+        <div class="pill">
+          <span class="dot warn" id="dotDispo"></span>
+          <span id="dispoLabel">…</span>
+        </div>
+      </div>
+      <div class="bd" id="jobs"></div>
+      <div class="bd" style="padding-top:0">
+        <div class="notice" id="emptyNotice" style="display:none;">Aucune mission pour l’instant. Reste dispo, ça va tomber. 🔥</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <div>
+          <b>🧾 Tableau chauffeur</b><br>
+          <small class="muted" id="phoneLabel">📱 —</small>
+        </div>
+        <div class="pill">
+          <span class="dot warn" id="dotSession"></span>
+          <span id="sessionLabel">…</span>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="kpi">
+          <div class="box"><b>Solde du jour</b><span id="kpiToday">—</span></div>
+          <div class="box"><b>Missions (7 jours)</b><span id="kpiWeek">—</span></div>
+          <div class="box"><b>Dernière sync</b><span id="kpiLast">—</span></div>
+          <div class="box"><b>Statut session</b><span id="kpiExp">—</span></div>
+        </div>
+        <div class="notice" id="log">Prêt. 🚀</div>
+      </div>
+    </div>
   </div>
+
 </div>
 
 <script>
-/* SUPABASE */
+/* 🔐 SUPABASE */
 const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* HELPERS */
 const $ = (id)=>document.getElementById(id);
-function log(msg){ $("log").textContent = msg; }
+const jobsEl = $("jobs");
+const emptyNotice = $("emptyNotice");
+const logEl = $("log");
+
+function log(msg){ logEl.textContent = msg; }
 function money(x){ return Number(x||0).toLocaleString("fr-FR") + " F CFA"; }
-
-/* STATE */
-const driverPhone = localStorage.getItem("digiy_fret_driver_phone") || "—";
-$("phone").textContent = driverPhone;
-$("subline").textContent = "📱 " + driverPhone + " • 0% commission • terrain first";
-
-let dispo = true;
-
-function setDispoUI(){
-  $("state").textContent = dispo ? "DISPO ✅" : "PAUSE ⏸️";
-  $("state2").textContent = dispo ? "DISPO" : "PAUSE";
-  const dot = $("dotState");
+function fmtDate(iso){
+  try{
+    const d = new Date(iso);
+    return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }catch(e){ return "—"; }
+}
+function normalizePhoneDisplay(phone){
+  if(!phone) return "—";
+  let p = String(phone).trim().replace(/[^\d+]/g, "");
+  if (/^\d{11,15}$/.test(p) && !p.startsWith("+")) p = "+" + p;
+  if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
+  return p;
+}
+function setConn(ok,label){
+  const dot = $("dotConn");
+  dot.classList.remove("ok","bad","warn");
+  dot.classList.add(ok ? "ok":"bad");
+  $("connLabel").textContent = label;
+}
+function setSession(ok,label){
+  const dot = $("dotSession");
+  dot.classList.remove("ok","bad","warn");
+  dot.classList.add(ok ? "ok":"bad");
+  $("sessionLabel").textContent = label;
+}
+function setDispoUI(isOn){
+  const dot = $("dotDispo");
   dot.classList.remove("ok","warn");
-  dot.classList.add(dispo ? "ok" : "warn");
-  $("btnToggle").textContent = dispo ? "Passer en pause" : "Repasser dispo";
+  dot.classList.add(isOn ? "ok":"warn");
+  $("dispoLabel").textContent = isOn ? "DISPO ✅" : "PAUSE ⏸️";
+  $("btnToggleDispo").textContent = isOn ? "⚡ Dispo" : "⏸️ Pause";
 }
 
-/* DEMO (si tu veux brancher RPC après, on remplace juste loadJobs/handlers) */
-let jobs = [
-  {id:"FRET-001", from_zone:"Dakar Plateau", to_zone:"Pikine", price_xof:4500, status:"pending"},
-  {id:"FRET-002", from_zone:"Saly", to_zone:"Ngaparou", price_xof:6500, status:"accepted"}
-];
+/* SESSION LOCAL (PIN) */
+const token = localStorage.getItem("digiy_fret_driver_token");
+const exp = localStorage.getItem("digiy_fret_driver_expires");
+const driverPhone = normalizePhoneDisplay(localStorage.getItem("digiy_fret_driver_phone"));
 
+$("phoneLabel").textContent = "📱 " + (driverPhone || "—");
+$("subline").textContent = "📱 " + (driverPhone || "—") + " • 0% commission • terrain first";
+
+let dispo = true;
+setDispoUI(true);
+
+(function sessionUI(){
+  if(!token || !exp){
+    setConn(false,"Non connecté");
+    setSession(false,"Session absente");
+    $("kpiExp").textContent = "—";
+    return;
+  }
+  const expDate = new Date(exp);
+  const ok = Date.now() < expDate.getTime();
+  setConn(ok, ok ? "Connecté" : "Expirée");
+  setSession(ok, ok ? "OK" : "EXPIRÉE");
+  $("kpiExp").textContent = ok ? ("Expire " + fmtDate(exp)) : ("Expirée " + fmtDate(exp));
+})();
+
+/* UI builders */
+function statusLabel(s){
+  const v = (s||"").toLowerCase();
+  if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
+  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
+  if(v==="started") return ["EN COURS","#fff7ed"];
+  if(v==="done") return ["LIVRÉE","#dcfce7"];
+  if(v==="refused") return ["REFUSÉE","#fff1f2"];
+  return [String(s||"—").toUpperCase(),"#f1f5f9"];
+}
 function jobCard(j){
-  const st = String(j.status||"").toUpperCase();
+  const [st,bg] = statusLabel(j.status);
   return `
     <div class="job" data-id="${j.id}">
-      <b>Mission ${j.id}</b>
+      <h3>🚚 Mission ${j.id}</h3>
+      <div class="chip" style="background:${bg}">🧾 ${st}</div>
+      <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
       <div class="chip">📍 ${j.from_zone} → ${j.to_zone}</div>
       <div class="chip">💰 ${money(j.price_xof)}</div>
-      <div class="chip">🧾 ${st}</div>
-      <div class="actions">
-        ${j.status==="pending" ? `<button class="ok" data-act="accept">Accepter</button>` : ``}
-        ${j.status==="accepted" ? `<button class="ok" data-act="start">Démarrer</button>` : ``}
-        ${j.status!=="done" ? `<button class="bad" data-act="refuse">Refuser</button>` : ``}
+      <div>
+        ${(String(j.status).toLowerCase()==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
+        ${(String(j.status).toLowerCase()==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
+        ${(String(j.status).toLowerCase()==="started") ? `<button class="mini ok" data-act="done">📦 Livré</button>` : ``}
+        ${(String(j.status).toLowerCase()!=="done") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
       </div>
     </div>
   `;
 }
-
 function renderJobs(list){
-  const box = $("jobs");
-  box.innerHTML = list.length ? list.map(jobCard).join("") : `<div class="muted">Aucune mission pour l’instant.</div>`;
+  jobsEl.innerHTML = "";
+  emptyNotice.style.display = list.length ? "none" : "block";
+  list.forEach(j=> jobsEl.insertAdjacentHTML("beforeend", jobCard(j)));
+}
+
+/* RPC — LIST */
+async function loadJobs(){
+  if(!token){
+    logout("Veuillez vous reconnecter");
+    return;
+  }
+  log("Chargement des missions…");
+  const { data, error } = await sb.rpc("rpc_fret_list_for_driver", { p_token: token });
+  if(error){
+    logout("Session invalide");
+    return;
+  }
+
+  const list = data || [];
+  renderJobs(list);
+
+  // KPIs
+  const start7 = Date.now() - 7*24*3600*1000;
+  const weekCount = list.filter(j => new Date(j.created_at).getTime() >= start7).length;
+  $("kpiWeek").textContent = String(weekCount);
+
+  const startDay = new Date(); startDay.setHours(0,0,0,0);
+  const sumToday = list
+    .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done"))
+    .reduce((s,j)=> s + Number(j.price_xof||0), 0);
+  $("kpiToday").textContent = money(sumToday);
+
+  $("kpiLast").textContent = fmtDate(new Date().toISOString());
+  log("OK ✅");
+}
+
+/* RPC — ACTIONS */
+async function actAccept(id){
+  const { error } = await sb.rpc("rpc_fret_accept", { p_token: token, p_job_id: id });
+  if(error) return log("Erreur accept ❗");
+  log("Acceptée ✅");
+  loadJobs();
+}
+async function actStart(id){
+  const { error } = await sb.rpc("rpc_fret_start", { p_token: token, p_job_id: id });
+  if(error) return log("Erreur démarrage ❗");
+  log("Démarrée ✅");
+  loadJobs();
+}
+async function actDone(id){
+  // Optionnel si tu crées rpc_fret_done côté SQL
+  const { error } = await sb.rpc("rpc_fret_done", { p_token: token, p_job_id: id });
+  if(error) return log("RPC done absente/erreur ❗");
+  log("Livrée ✅");
+  loadJobs();
+}
+async function actRefuse(id){
+  const { error } = await sb.rpc("rpc_fret_refuse", { p_token: token, p_job_id: id });
+  if(error) return log("Erreur refus ❗");
+  log("Refusée ❌");
+  loadJobs();
 }
 
 /* EVENTS */
-$("btnToggle").addEventListener("click", ()=>{
+$("btnRefresh").addEventListener("click", loadJobs);
+
+$("btnToggleDispo").addEventListener("click", ()=>{
   dispo = !dispo;
-  setDispoUI();
+  setDispoUI(dispo);
   log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
 });
 
-$("btnRefresh").addEventListener("click", ()=>{
-  // Plus tard: loadJobs() via RPC
-  renderJobs(jobs);
-  log("Actualisé ✅");
-});
+$("btnLogout").addEventListener("click", ()=> logout("Déconnecté"));
 
-$("jobs").addEventListener("click", (e)=>{
+$("jobs").addEventListener("click", async (e)=>{
   const btn = e.target.closest("button");
   if(!btn) return;
   const card = e.target.closest(".job");
@@ -206,23 +365,15 @@ $("jobs").addEventListener("click", (e)=>{
   const act = btn.dataset.act;
   if(!id) return;
 
-  // DEMO actions (plus tard: RPC)
-  const j = jobs.find(x=>x.id===id);
-  if(!j) return;
-
-  if(act==="accept"){ j.status="accepted"; log("Mission acceptée ✅"); }
-  if(act==="start"){ j.status="started"; log("Mission démarrée ✅"); }
-  if(act==="refuse"){ j.status="refused"; log("Mission refusée ✅"); }
-
-  renderJobs(jobs);
+  if(act==="accept") return actAccept(id);
+  if(act==="start") return actStart(id);
+  if(act==="done") return actDone(id);
+  if(act==="refuse") return actRefuse(id);
 });
 
 /* START */
-setDispoUI();
-renderJobs(jobs);
-log("Prêt. 🚀");
+loadJobs();
 </script>
 
 </body>
 </html>
-
