@@ -1,11 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<title>Redirect</title>
-<script>
-location.replace("./index.html");
-</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY FRET — PIN Livraison Chauffeur</title>
+  <meta name="theme-color" content="#16a34a" />
+
+  <style>
+    :root{
+      --bg:#f7fbf8; --card:#ffffff; --line:rgba(2,6,23,.12);
+      --text:#0f172a; --muted:#475569;
+      --green:#16a34a; --gold:#facc15; --danger:#ef4444;
+      --radius:18px; --shadow:0 14px 32px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:520px;margin:0 auto;padding:16px}
+    header{padding:18px 0 8px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      display:grid;place-items:center;
+      font-weight:1000;
+      background:linear-gradient(135deg,var(--gold),#f97316);
+      color:#111827;
+      box-shadow:0 12px 26px rgba(250,204,21,.25)
+    }
+    h1{margin:0;font-size:18px;font-weight:1000}
+    .sub{margin-top:4px;color:var(--muted);font-size:13px;font-weight:700}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-top:14px;
+    }
+
+    label{display:block;font-weight:1000;font-size:13px;margin:8px 0}
+    input{
+      width:100%;
+      padding:16px 14px;
+      border:1px solid rgba(2,6,23,.18);
+      border-radius:14px;
+      font-size:22px;
+      font-weight:1100;
+      letter-spacing:.3em;
+      text-align:center;
+      outline:none;
+    }
+    input:focus{
+      border-color:rgba(22,163,74,.55);
+      box-shadow:0 0 0 4px rgba(22,163,74,.12);
+    }
+
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:14px;
+      border:none;
+      border-radius:14px;
+      background:var(--green);
+      color:#fff;
+      font-weight:1100;
+      font-size:15px;
+      cursor:pointer;
+    }
+    button:disabled{opacity:.6;cursor:not-allowed}
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      font-weight:1000;
+      font-size:12px;
+      border:1px solid rgba(2,6,23,.12);
+      background:rgba(255,255,255,.7);
+    }
+    .ok{color:var(--green)}
+    .bad{color:var(--danger)}
+    .muted{color:var(--muted)}
+
+    .row{display:flex;gap:10px;margin-top:12px}
+    .ghost{
+      flex:1;
+      background:transparent;
+      border:1px solid rgba(2,6,23,.18);
+      border-radius:14px;
+      padding:12px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .mini{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.4;
+    }
+  </style>
 </head>
-<body></body>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">∞</div>
+      <div>
+        <h1>PIN Livraison</h1>
+        <div class="sub">Le client te donne le PIN → tu valides → terminé.</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div id="line" class="pill muted">⏳ Préparation…</div>
+
+    <label>PIN (4 chiffres)</label>
+    <input id="pin" inputmode="numeric" maxlength="4" placeholder="••••" />
+
+    <button id="btn" disabled>Valider livraison</button>
+
+    <div class="row">
+      <button class="ghost" onclick="location.reload()">Rafraîchir</button>
+      <button class="ghost" onclick="history.back()">Retour</button>
+    </div>
+
+    <div class="mini">
+      🔒 Sans PIN correct = pas livré.<br>
+      Le PIN est donné **oralement** par le client.
+    </div>
+  </div>
+</div>
+
+<script>
+/* 🔐 SUPABASE — DÉJÀ POSÉ */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.Wm3b1yqR4c7o3a3o4lP0d2m0qYp9b0oQ1yq0y0y0y0y0";
+
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+s.onload = boot;
+document.head.appendChild(s);
+
+function setLine(type, txt){
+  const el = document.getElementById("line");
+  el.className = "pill " + (type==="ok" ? "ok" : type==="bad" ? "bad" : "muted");
+  el.textContent = txt;
+}
+
+function getSession(){
+  try{
+    const token = localStorage.getItem("digiy_fret_driver_token");
+    const exp = localStorage.getItem("digiy_fret_driver_expires");
+    if(!token || !exp) return null;
+    if(Date.now() >= new Date(exp).getTime()) return null;
+    return { token };
+  }catch(e){ return null; }
+}
+
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+let supabase, ORDER_ID;
+
+function boot(){
+  const session = getSession();
+  if(!session){
+    setLine("bad","⛔ Session chauffeur expirée.");
+    return;
+  }
+
+  const url = new URL(location.href);
+  ORDER_ID = url.searchParams.get("id");
+  if(!ORDER_ID){
+    setLine("bad","❌ ID commande manquant (?id=...)");
+    return;
+  }
+
+  supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    { global:{ headers:{ Authorization:"Bearer "+session.token } } }
+  );
+
+  const pinInput = document.getElementById("pin");
+  const btn = document.getElementById("btn");
+
+  pinInput.addEventListener("input", ()=>{
+    pinInput.value = pinInput.value.replace(/\D/g,"").slice(0,4);
+    btn.disabled = !/^\d{4}$/.test(pinInput.value);
+  });
+
+  btn.onclick = ()=> validateDelivery(pinInput.value.trim());
+
+  setLine("muted","✅ Prêt. Entre le PIN du client.");
+}
+
+async function validateDelivery(pin){
+  if(!/^\d{4}$/.test(pin)){
+    setLine("bad","⚠️ PIN invalide.");
+    return;
+  }
+
+  setLine("muted","🔐 Vérification PIN…");
+
+  const { data:order, error:e1 } = await supabase
+    .from("fret_orders")
+    .select("status, delivery_pin_hash")
+    .eq("id", ORDER_ID)
+    .maybeSingle();
+
+  if(e1){ setLine("bad","⛔ "+e1.message); return; }
+  if(!order){ setLine("bad","❌ Commande introuvable."); return; }
+  if(order.status === "delivered"){ setLine("ok","✅ Déjà livré."); return; }
+  if(!order.delivery_pin_hash){ setLine("bad","⚠️ PIN non généré."); return; }
+
+  const computed = await sha256Hex(ORDER_ID + ":" + pin);
+  if(computed !== order.delivery_pin_hash){
+    setLine("bad","❌ PIN incorrect.");
+    return;
+  }
+
+  const { error:e2 } = await supabase
+    .from("fret_orders")
+    .update({
+      status:"delivered",
+      validated_at:new Date().toISOString()
+    })
+    .eq("id", ORDER_ID);
+
+  if(e2){ setLine("bad","⛔ "+e2.message); return; }
+
+  setLine("ok","🎉 Livraison validée.");
+}
+</script>
+</body>
 </html>
+
