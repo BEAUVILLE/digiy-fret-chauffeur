@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DIGIY FRET — Chauffeur</title>
+  <title>DIGIY FRET — Dashboard Chauffeur</title>
   <meta name="theme-color" content="#0ea5e9" />
 
   <!-- 🔐 TOKEN GUARD -->
@@ -33,18 +33,126 @@
   })();
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    body{margin:0;font-family:system-ui,Arial;background:#f7fbff;padding:18px}
-    .card{max-width:900px;margin:auto;background:#fff;border-radius:18px;padding:18px}
-    button{padding:10px 14px;border-radius:12px;border:0;background:#0ea5e9;color:#000;font-weight:900;cursor:pointer}
+    :root{
+      --bg:#f7fbff;--card:#fff;--line:rgba(0,0,0,.08);
+      --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:system-ui,Arial;
+      background:linear-gradient(180deg,#f7fbff,#fff7ed);
+      padding:16px;
+    }
+    header{
+      display:flex;justify-content:space-between;align-items:center;
+      background:#fff;border:1px solid var(--line);
+      border-radius:18px;padding:14px 16px;margin-bottom:16px;
+    }
+    h1{margin:0;font-size:18px}
+    button{
+      padding:10px 14px;border-radius:12px;
+      border:0;font-weight:900;cursor:pointer;
+    }
+    .btn{background:#e0f2fe}
+    .btn.danger{background:#fee2e2}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{
+      background:#fff;border:1px solid var(--line);
+      border-radius:18px;padding:14px;
+    }
+    .job{
+      border:1px solid var(--line);
+      border-radius:14px;padding:12px;margin-bottom:10px;
+    }
+    .job b{display:block}
+    .chip{
+      display:inline-block;margin-top:6px;margin-right:6px;
+      padding:6px 10px;border-radius:999px;
+      background:#f1f5f9;font-weight:900;font-size:12px;
+    }
+    .actions button{
+      margin-top:8px;margin-right:6px;
+      background:#e0f2fe;
+    }
+    .actions .ok{background:#dcfce7}
+    .actions .bad{background:#fee2e2}
   </style>
 </head>
+
 <body>
+
+<header>
+  <h1>🚚 DIGIY FRET — Chauffeur</h1>
+  <button class="btn danger" onclick="logout('Déconnexion')">Déconnexion</button>
+</header>
+
+<div class="grid">
+  <!-- MISSIONS -->
   <div class="card">
-    <h1>🚚 DIGIY FRET — Dashboard Chauffeur</h1>
-    <p>Session active.</p>
-    <button onclick="logout('Déconnexion')">Déconnexion</button>
+    <h2>📦 Missions Fret</h2>
+    <div id="jobs"></div>
   </div>
+
+  <!-- PROFIL -->
+  <div class="card">
+    <h2>🧑‍✈️ Mon statut</h2>
+    <p><b>Téléphone :</b> <span id="phone"></span></p>
+    <p><b>État :</b> <span id="state">DISPO</span></p>
+    <button class="btn" onclick="toggleDispo()">Changer statut</button>
+  </div>
+</div>
+
+<script>
+/* SUPABASE */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* STATE */
+const phone = localStorage.getItem("digiy_fret_driver_phone");
+document.getElementById("phone").textContent = phone || "—";
+let dispo = true;
+
+/* DEMO DATA (remplacé ensuite par RPC) */
+const demoJobs = [
+  {id:"FRET-001", from:"Dakar Plateau", to:"Pikine", price:4500, status:"pending"},
+  {id:"FRET-002", from:"Saly", to:"Ngaparou", price:6500, status:"accepted"}
+];
+
+function renderJobs(){
+  const box = document.getElementById("jobs");
+  box.innerHTML = "";
+  demoJobs.forEach(j=>{
+    const el = document.createElement("div");
+    el.className = "job";
+    el.innerHTML = `
+      <b>Mission ${j.id}</b>
+      <div class="chip">📍 ${j.from} → ${j.to}</div>
+      <div class="chip">💰 ${j.price} F CFA</div>
+      <div class="chip">🧾 ${j.status.toUpperCase()}</div>
+      <div class="actions">
+        ${j.status==="pending" ? `<button class="ok">Accepter</button>` : ``}
+        ${j.status==="accepted" ? `<button class="ok">Démarrer</button>` : ``}
+        ${j.status!=="done" ? `<button class="bad">Refuser</button>` : ``}
+      </div>
+    `;
+    box.appendChild(el);
+  });
+}
+
+function toggleDispo(){
+  dispo = !dispo;
+  document.getElementById("state").textContent = dispo ? "DISPO" : "PAUSE";
+}
+
+renderJobs();
+</script>
+
 </body>
 </html>
+
 
