@@ -1,237 +1,321 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>DIGIY FRET — Validation Livraison (PIN)</title>
-  <meta name="theme-color" content="#16a34a" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRET PRO - Connexion</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root{
-      --bg:#f7fbf8; --card:#ffffff; --line:rgba(2,6,23,.12);
-      --text:#0f172a; --muted:#475569;
-      --green:#16a34a; --gold:#facc15; --danger:#ef4444;
-      --radius:18px; --shadow:0 14px 32px rgba(2,6,23,.08);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    header{padding:18px 16px;background:linear-gradient(135deg, rgba(22,163,74,.16), rgba(250,204,21,.14));border-bottom:1px solid var(--line)}
-    .wrap{max-width:780px;margin:0 auto;padding:16px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-weight:1000;
-      background:linear-gradient(135deg,var(--gold),#f97316);color:#111827;box-shadow:0 12px 26px rgba(250,204,21,.25)}
-    h1{margin:0;font-size:18px;font-weight:1000}
-    .sub{margin:4px 0 0;color:var(--muted);font-weight:700;font-size:13px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-top:14px}
-    label{display:block;font-weight:900;font-size:13px;margin:10px 0 6px}
-    input{width:100%;padding:12px 12px;border:1px solid rgba(2,6,23,.14);border-radius:14px;font-size:16px;outline:none}
-    input:focus{border-color:rgba(22,163,74,.55);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
-    .row{display:grid;grid-template-columns:1fr;gap:10px}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;cursor:pointer}
-    .primary{background:var(--green);color:#fff}
-    .ghost{background:transparent;border:1px solid rgba(2,6,23,.18);color:var(--text)}
-    .danger{background:var(--danger);color:#fff}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;font-weight:900;font-size:12px;border:1px solid rgba(2,6,23,.12);background:rgba(255,255,255,.7)}
-    .ok{color:var(--green)}
-    .bad{color:var(--danger)}
-    .muted{color:var(--muted)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-    .k{font-size:12px;color:var(--muted);font-weight:800}
-    .v{font-size:14px;font-weight:950}
-    .sep{height:1px;background:rgba(2,6,23,.10);margin:12px 0}
-    .note{font-size:12px;color:var(--muted);font-weight:700;line-height:1.4}
+    .pin-container {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .pin-header { text-align: center; margin-bottom: 40px; }
+    .logo {
+      width: 80px; height: 80px; border-radius: 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: inline-grid; place-items: center;
+      box-shadow: 0 0 20px rgba(102,126,234,0.3);
+      font-size: 40px; margin-bottom: 20px;
+    }
+    h1 { color: #1a1c1f; font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+    .subtitle { color: #6b7280; font-size: 15px; font-weight: 500; }
+    .form-group { margin-bottom: 24px; }
+    label {
+      display: block; color: #2b2f36; font-weight: 700;
+      margin-bottom: 10px; font-size: 14px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%; padding: 16px 20px;
+      border: 2px solid #e5e7eb; border-radius: 12px;
+      font-size: 18px; transition: all 0.3s; background: #fafafa;
+    }
+    input:focus {
+      outline: none; border-color: #667eea;
+      background: white; box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+    }
+    .slug-input {
+      font-family: ui-monospace, Menlo, monospace;
+      text-transform: lowercase;
+    }
+    .pin-input {
+      text-align: center; letter-spacing: 16px;
+      font-size: 32px; font-weight: 900;
+      font-family: ui-monospace, Menlo, monospace;
+      padding-left: 24px;
+    }
+    .pin-dots { display: flex; justify-content: center; gap: 12px; margin-top: 12px; }
+    .dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #e5e7eb; transition: all 0.2s;
+    }
+    .dot.filled {
+      background: #667eea;
+      box-shadow: 0 0 0 4px rgba(102,126,234,0.2);
+    }
+    .btn-login {
+      width: 100%; padding: 18px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; border: none; border-radius: 12px;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+    }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .error-message {
+      background: #fee; border: 2px solid #fca5a5; color: #991b1b;
+      padding: 14px 16px; border-radius: 10px; margin-bottom: 24px;
+      font-size: 14px; font-weight: 600; display: none;
+      animation: shake 0.4s;
+    }
+    .error-message.show { display: block; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    .info-box {
+      background: #ede9fe; border: 2px solid #c4b5fd; color: #5b21b6;
+      padding: 16px; border-radius: 10px; margin-top: 24px;
+      font-size: 13px; font-weight: 600;
+    }
+    .info-box strong { display: block; margin-bottom: 8px; font-size: 14px; }
+    .info-box code {
+      background: #fff; padding: 2px 8px; border-radius: 4px;
+      font-family: ui-monospace, Menlo, monospace;
+      color: #7c3aed; font-weight: 700;
+    }
+    .session-info {
+      display: flex; justify-content: center; align-items: center;
+      gap: 8px; margin-top: 16px; color: #6b7280;
+      font-size: 12px; font-weight: 600;
+    }
+    .status-indicator {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <div class="brand">
-      <div class="logo">∞</div>
-      <div>
-        <h1>DIGIY FRET — Validation Livraison</h1>
-        <div class="sub">PIN livraison • preuve simple • terrain first</div>
-      </div>
+  <div class="pin-container">
+    <div class="pin-header">
+      <div class="logo">📦</div>
+      <h1>FRET PRO</h1>
+      <div class="subtitle">Transport de marchandises</div>
     </div>
-  </div>
-</header>
 
-<main class="wrap">
+    <div class="error-message" id="errorMessage"></div>
 
-  <div class="card">
-    <div class="row">
-      <label>ID Commande (fret_orders.id)</label>
-      <input id="orderId" placeholder="Ex: 7b7c1f2a-...." />
-
-      <label>PIN client (4 chiffres)</label>
-      <input id="pin" inputmode="numeric" maxlength="4" placeholder="Ex: 1234" />
-
-      <div class="btns">
-        <button class="ghost" id="btnLoad">Charger commande</button>
-        <button class="primary" id="btnValidate">Valider livraison</button>
-        <button class="danger" id="btnCancel">Annuler</button>
+    <form id="pinForm">
+      <div class="form-group">
+        <label for="slugInput">🚛 Identifiant transporteur</label>
+        <input 
+          type="text" 
+          id="slugInput" 
+          class="slug-input"
+          placeholder="fret-transport-moussa"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+        >
       </div>
 
-      <div class="sep"></div>
-
-      <div id="statusLine" class="pill muted">⏳ En attente…</div>
-
-      <div id="orderBox" style="display:none;margin-top:10px">
-        <div class="grid2">
-          <div>
-            <div class="k">Client</div>
-            <div class="v" id="oClient">—</div>
-          </div>
-          <div>
-            <div class="k">Statut</div>
-            <div class="v" id="oStatus">—</div>
-          </div>
-          <div>
-            <div class="k">Départ</div>
-            <div class="v" id="oFrom">—</div>
-          </div>
-          <div>
-            <div class="k">Arrivée</div>
-            <div class="v" id="oTo">—</div>
-          </div>
-        </div>
-        <div class="sep"></div>
-        <div class="note">
-          Astuce terrain : le client te donne le PIN **oralement**. Sans PIN correct = pas livré.
+      <div class="form-group">
+        <label for="pinInput">🔐 Code PIN</label>
+        <input 
+          type="text" 
+          id="pinInput" 
+          class="pin-input"
+          placeholder="••••"
+          maxlength="4"
+          pattern="[0-9]{4}"
+          inputmode="numeric"
+          autocomplete="off"
+          required
+        >
+        <div class="pin-dots" id="pinDots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
         </div>
       </div>
+
+      <button type="submit" class="btn-login" id="loginBtn">
+        🚀 Accéder
+      </button>
+    </form>
+
+    <div class="session-info">
+      <div class="status-indicator"></div>
+      <span>Session sécurisée 8 heures</span>
+    </div>
+
+    <div class="info-box">
+      <strong>🧪 Compte de test</strong>
+      Slug: <code>fret-transport-moussa</code><br>
+      PIN: <code>5999</code>
     </div>
   </div>
 
-</main>
+  <script>
+    // Config Supabase
+    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    
+    let supabaseClient;
+    
+    if (typeof window.supabase === 'undefined') {
+      console.error('⚠️ Supabase non chargé !');
+      alert('Erreur : Bibliothèque Supabase non disponible');
+    } else {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('✅ Client Supabase créé pour FRET PRO');
+    }
 
-<script>
-/* 🔐 SUPABASE — DÉJÀ POSÉ */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.Wm3b1yqR4c7o3a3o4lP0d2m0qYp9b0oQ1yq0y0y0y0y0"; // (ta clé complète ici si différente)
+    const pinInput = document.getElementById('pinInput');
+    const pinDots = document.getElementById('pinDots');
+    const slugInput = document.getElementById('slugInput');
 
-/* supabase-js v2 */
-const s = document.createElement("script");
-s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-s.onload = () => boot();
-document.head.appendChild(s);
+    pinInput.addEventListener('input', (e) => {
+      const value = e.target.value;
+      const dots = pinDots.querySelectorAll('.dot');
+      dots.forEach((dot, index) => {
+        if (index < value.length) {
+          dot.classList.add('filled');
+        } else {
+          dot.classList.remove('filled');
+        }
+      });
+    });
 
-function getDriverSession(){
-  try{
-    const token = localStorage.getItem("digiy_fret_driver_token");
-    const exp = localStorage.getItem("digiy_fret_driver_expires");
-    if(!token || !exp) return null;
-    if(Date.now() >= new Date(exp).getTime()) return null;
-    return { token };
-  }catch(e){ return null; }
-}
+    slugInput.addEventListener('input', (e) => {
+      let value = e.target.value.toLowerCase();
+      value = value.replace(/\s+/g, '-');
+      value = value.replace(/[^a-z0-9-]/g, '');
+      e.target.value = value;
+    });
 
-async function sha256Hex(str){
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
+    document.getElementById('pinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!supabaseClient) {
+        showError('Client Supabase non disponible');
+        return;
+      }
 
-function setLine(type, txt){
-  const el = document.getElementById("statusLine");
-  el.className = "pill " + (type==="ok" ? "ok" : type==="bad" ? "bad" : "muted");
-  el.textContent = txt;
-}
+      const slug = slugInput.value.trim();
+      const pin = pinInput.value.trim();
+      const loginBtn = document.getElementById('loginBtn');
+      const errorDiv = document.getElementById('errorMessage');
 
-let supabase;
+      if (!slug) {
+        showError('L\'identifiant transporteur est requis');
+        return;
+      }
 
-function boot(){
-  const session = getDriverSession();
-  if(!session){
-    setLine("bad","⛔ Session chauffeur expirée. Retour dashboard / login.");
-    return;
-  }
+      if (!/^[0-9]{4}$/.test(pin)) {
+        showError('Le PIN doit contenir exactement 4 chiffres');
+        return;
+      }
 
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: "Bearer " + session.token } }
-  });
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '⏳ Connexion...';
+      errorDiv.classList.remove('show');
 
-  // prefill via ?id=
-  const url = new URL(location.href);
-  const id = url.searchParams.get("id");
-  if(id) document.getElementById("orderId").value = id;
+      try {
+        console.log('🔍 Appel RPC verify_access_pin...');
+        console.log('Slug:', slug);
+        console.log('PIN:', pin);
 
-  document.getElementById("btnLoad").onclick = loadOrder;
-  document.getElementById("btnValidate").onclick = validatePin;
-  document.getElementById("btnCancel").onclick = () => history.back();
+        const { data, error } = await supabaseClient.rpc('verify_access_pin', {
+          p_slug: slug,
+          p_pin: pin
+        });
 
-  setLine("muted","✅ Prêt. Charge la commande puis valide avec le PIN.");
-}
+        if (error) {
+          console.error('❌ Erreur RPC:', error);
+          throw error;
+        }
 
-async function loadOrder(){
-  const orderId = document.getElementById("orderId").value.trim();
-  if(!orderId){ setLine("bad","⚠️ Mets l’ID commande."); return; }
+        console.log('✅ Réponse reçue:', data);
 
-  setLine("muted","⏳ Chargement…");
-  const { data, error } = await supabase
-    .from("fret_orders")
-    .select("id, client_phone, driver_phone, status, pickup_city, pickup_area, drop_city, drop_area, validated_at")
-    .eq("id", orderId)
-    .maybeSingle();
+        if (data && data.owner_id) {
+          const expiry = Date.now() + (8 * 60 * 60 * 1000);
+          
+          const sessionData = {
+            ownerId: data.owner_id,
+            slug: slug,
+            transportName: formatSlugToName(slug),
+            expiry: expiry,
+            loginTime: new Date().toISOString()
+          };
 
-  if(error){ setLine("bad","⛔ Erreur chargement: " + error.message); return; }
-  if(!data){ setLine("bad","❌ Commande introuvable."); return; }
+          localStorage.setItem('digiy_session', JSON.stringify(sessionData));
 
-  document.getElementById("orderBox").style.display = "block";
-  document.getElementById("oClient").textContent = data.client_phone || "—";
-  document.getElementById("oStatus").textContent = data.status || "—";
-  document.getElementById("oFrom").textContent = [data.pickup_city, data.pickup_area].filter(Boolean).join(" • ") || "—";
-  document.getElementById("oTo").textContent = [data.drop_city, data.drop_area].filter(Boolean).join(" • ") || "—";
+          loginBtn.innerHTML = '✅ Connexion réussie !';
+          loginBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
 
-  if(data.status === "delivered"){
-    setLine("ok","✅ Déjà livré (" + (data.validated_at ? new Date(data.validated_at).toLocaleString() : "ok") + ").");
-  }else{
-    setLine("muted","✅ Commande chargée. Saisis le PIN client.");
-  }
-}
+          console.log('✅ Session créée, redirection vers /digiy-fret-pro/');
+          
+          setTimeout(() => {
+            window.location.href = '/digiy-fret-pro/';
+          }, 800);
+        } else {
+          showError('❌ Identifiant ou PIN incorrect');
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = '🚀 Accéder';
+        }
+      } catch (err) {
+        console.error('❌ Erreur connexion:', err);
+        showError('⚠️ Erreur: ' + (err.message || 'Connexion impossible'));
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '🚀 Accéder';
+      }
+    });
 
-async function validatePin(){
-  const orderId = document.getElementById("orderId").value.trim();
-  const pin = document.getElementById("pin").value.trim();
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+      setTimeout(() => errorDiv.classList.remove('show'), 5000);
+    }
 
-  if(!orderId){ setLine("bad","⚠️ Mets l’ID commande."); return; }
-  if(!/^\d{4}$/.test(pin)){ setLine("bad","⚠️ PIN invalide. (4 chiffres)"); return; }
+    function formatSlugToName(slug) {
+      return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
 
-  setLine("muted","🔐 Vérification PIN…");
-
-  // 1) lire hash stocké
-  const { data: order, error: e1 } = await supabase
-    .from("fret_orders")
-    .select("id, driver_phone, status, delivery_pin_hash")
-    .eq("id", orderId)
-    .maybeSingle();
-
-  if(e1){ setLine("bad","⛔ Erreur lecture: " + e1.message); return; }
-  if(!order){ setLine("bad","❌ Commande introuvable."); return; }
-  if(order.status === "delivered"){ setLine("ok","✅ Déjà livré."); return; }
-  if(!order.delivery_pin_hash){ setLine("bad","⚠️ PIN non généré sur cette commande."); return; }
-
-  // 2) comparer hash
-  const computed = await sha256Hex(orderId + ":" + pin);
-  if(computed !== order.delivery_pin_hash){
-    setLine("bad","❌ PIN incorrect. Re-demande au client.");
-    return;
-  }
-
-  // 3) valider livraison
-  setLine("muted","✅ PIN OK… validation livraison…");
-  const { error: e2 } = await supabase
-    .from("fret_orders")
-    .update({ status:"delivered", validated_at: new Date().toISOString() })
-    .eq("id", orderId);
-
-  if(e2){ setLine("bad","⛔ Erreur validation: " + e2.message); return; }
-
-  setLine("ok","🎉 Livré confirmé. Course terminée.");
-  await loadOrder();
-}
-</script>
+    window.addEventListener('DOMContentLoaded', () => {
+      slugInput.focus();
+      console.log('🦅 Page de connexion FRET PRO chargée');
+    });
+  </script>
 
 </body>
 </html>
