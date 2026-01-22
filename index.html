@@ -1,455 +1,761 @@
-<!-- TEST_PUSH_999 -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DIGIY FRET — Dashboard Chauffeur</title>
-  <meta name="theme-color" content="#0ea5e9" />
-
-  <!-- 🔐 TOKEN GUARD -->
-  <script>
-  function getSession(){
-    try{
-      const token = localStorage.getItem("digiy_fret_driver_token");
-      const exp = localStorage.getItem("digiy_fret_driver_expires");
-      if(!token || !exp) return null;
-      return { token, exp: new Date(exp) };
-    }catch(e){ return null; }
-  }
-  function isExpired(exp){ return Date.now() >= exp.getTime(); }
-  function logout(reason){
-    try{
-      localStorage.removeItem("digiy_fret_driver_token");
-      localStorage.removeItem("digiy_fret_driver_expires");
-      localStorage.removeItem("digiy_fret_driver_phone");
-    }catch(e){}
-    if(reason) alert(reason);
-    location.replace("./login.html");
-  }
-  (function(){
-    const s = getSession();
-    if(!s) return logout("Veuillez vous reconnecter");
-    if(isExpired(s.exp)) return logout("Session expirée");
-  })();
-  </script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRET PRO - DIGIYLYFE</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="guard.js"></script>
   <style>
-    :root{
-      --bg1:#f7fbff;--bg2:#fff7ed;--card:rgba(255,255,255,.92);
-      --text:#0b1220;--muted:#5b6472;--line:rgba(0,0,0,.10);
-      --sky:#0ea5e9;--gold:#f59e0b;--ok:#16a34a;--bad:#dc2626;
-      --radius:18px;--shadow:0 12px 28px rgba(0,0,0,.10);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;min-height:100vh;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      background:
-        radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,.22), transparent 55%),
-        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,.18), transparent 55%),
-        linear-gradient(180deg,var(--bg1),var(--bg2));
-      padding:16px;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
     }
-    .topbar{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-      background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;
-      padding:14px;box-shadow:var(--shadow);backdrop-filter: blur(10px);
-      position:sticky;top:10px;z-index:5;
+
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:44px;height:44px;border-radius:14px;
-      background:linear-gradient(135deg,var(--sky),var(--gold));
-      display:flex;align-items:center;justify-content:center;font-weight:900
+
+    .header-left h1 {
+      font-size: 28px;
+      color: #1a1c1f;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-    .btn{
-      padding:10px 12px;border-radius:14px;border:1px solid var(--line);
-      background:#fff;font-weight:900;cursor:pointer
+
+    .header-left p {
+      color: #6b7280;
+      font-size: 14px;
     }
-    .btn.primary{background:#e0f2fe;border-color:#7dd3fc}
-    .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;border:1px solid var(--line);font-weight:900;background:#fff
+
+    .btn-logout {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
     }
-    .dot{width:10px;height:10px;border-radius:50%}
-    .dot.ok{background:var(--ok)} .dot.warn{background:var(--gold)} .dot.bad{background:var(--bad)}
-    .grid{margin-top:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    .card{
-      background:rgba(255,255,255,.86);border:1px solid var(--line);
-      border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter: blur(10px);
+
+    .btn-logout:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
     }
-    .hd{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .bd{padding:14px}
-    .muted{color:var(--muted);font-weight:750;font-size:13px}
-    .job{
-      border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
     }
-    .job h3{margin:0;font-size:14px}
-    .chip{
-      display:inline-block;padding:6px 10px;border-radius:999px;
-      background:#f1f5f9;font-weight:900;font-size:12px;margin:6px 6px 0 0
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .mini{
-      padding:9px 10px;border-radius:12px;border:1px solid var(--line);
-      background:#fff;font-weight:900;cursor:pointer;margin:8px 8px 0 0
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .mini.primary{background:#e0f2fe;border-color:#7dd3fc}
-    .mini.ok{background:#dcfce7;border-color:#bbf7d0}
-    .mini.bad{background:#fff1f2;border-color:#fecdd3;color:#8a1010}
-    .notice{
-      margin-top:10px;padding:10px 12px;border-radius:14px;
-      background:#f8fafc;border:1px dashed rgba(0,0,0,.18);
-      font-size:13px;color:var(--muted);font-weight:750
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 900;
+      color: #1a1c1f;
     }
-    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:520px){.kpi{grid-template-columns:1fr}}
-    .box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-    .box b{display:block;font-size:12px}
-    .box span{display:block;margin-top:6px;color:var(--muted);font-weight:800}
+
+    .stat-card .value.money {
+      color: #10b981;
+    }
+
+    /* Tabs */
+    .tabs {
+      background: white;
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #6b7280;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    /* Livraisons */
+    .livraisons-container {
+      display: none;
+    }
+
+    .livraisons-container.active {
+      display: block;
+    }
+
+    .livraison-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+    }
+
+    .livraison-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transform: translateY(-2px);
+    }
+
+    .livraison-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .livraison-numero {
+      font-size: 18px;
+      font-weight: 900;
+      color: #1a1c1f;
+      font-family: monospace;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge.accepted {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge.in-progress {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .badge.delivered {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .livraison-route {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .livraison-route .from {
+      color: #667eea;
+    }
+
+    .livraison-route .to {
+      color: #764ba2;
+    }
+
+    .livraison-route .arrow {
+      color: #9ca3af;
+      font-size: 20px;
+    }
+
+    .livraison-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #4b5563;
+      font-size: 14px;
+    }
+
+    .detail-item strong {
+      color: #1a1c1f;
+    }
+
+    .livraison-client {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .client-name {
+      font-weight: 700;
+      color: #1a1c1f;
+      margin-bottom: 4px;
+    }
+
+    .client-contact {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .livraison-price {
+      font-size: 24px;
+      font-weight: 900;
+      color: #10b981;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .livraison-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-accept {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-accept:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+
+    .btn-refuse {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-refuse:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+    }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: white;
+    }
+
+    .btn-whatsapp:hover {
+      background: #1ebe57;
+      transform: translateY(-2px);
+    }
+
+    .btn-maps {
+      background: #4285f4;
+      color: white;
+    }
+
+    .btn-maps:hover {
+      background: #3367d6;
+      transform: translateY(-2px);
+    }
+
+    .btn-delivered {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-delivered:hover {
+      background: #7c3aed;
+      transform: translateY(-2px);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #9ca3af;
+    }
+
+    .empty-state .icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f4f6;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .livraison-route {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      .livraison-actions {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
-
 <body>
-<div class="wrap" style="max-width:1100px;margin:auto">
 
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">🚚</div>
-      <div>
-        <b>DIGIY FRET — Chauffeur</b><br>
-        <small id="subline" class="muted">0% commission • terrain first</small>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>
+          📦 FRET PRO
+          <span id="transporteurName"></span>
+        </h1>
+        <p>Plateforme de transport de marchandises</p>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        🚪 Déconnexion
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <h3>📦 Aujourd'hui</h3>
+        <div class="value" id="statToday">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>🚚 En cours</h3>
+        <div class="value" id="statInProgress">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>✅ Total livraisons</h3>
+        <div class="value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>💰 Revenus du jour</h3>
+        <div class="value money" id="statRevenue">0 FCFA</div>
       </div>
     </div>
 
-    <div class="right">
-      <button class="btn primary" id="btnRefresh">↻ Actualiser</button>
-      <button class="btn" id="btnToggleDispo">⚡ Dispo</button>
-      <button class="btn danger" id="btnLogout">Déco</button>
-      <div class="pill">
-        <span class="dot" id="dotConn"></span>
-        <span id="connLabel">…</span>
-      </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('pending')">
+        📋 Demandes disponibles (<span id="countPending">0</span>)
+      </button>
+      <button class="tab" onclick="switchTab('accepted')">
+        ✅ Acceptées (<span id="countAccepted">0</span>)
+      </button>
+      <button class="tab" onclick="switchTab('in-progress')">
+        🚚 En cours (<span id="countInProgress">0</span>)
+      </button>
+      <button class="tab" onclick="switchTab('delivered')">
+        📋 Historique (<span id="countDelivered">0</span>)
+      </button>
     </div>
+
+    <!-- Livraisons containers -->
+    <div id="pendingContainer" class="livraisons-container active"></div>
+    <div id="acceptedContainer" class="livraisons-container"></div>
+    <div id="inProgressContainer" class="livraisons-container"></div>
+    <div id="deliveredContainer" class="livraisons-container"></div>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <div class="hd">
-        <div>
-          <b>📦 Missions fret</b><br>
-          <small class="muted">Disponibles + tes missions</small>
+  <script>
+    // Config Supabase
+    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+    let supa;
+    let session;
+    let transporteurId;
+    let currentTab = 'pending';
+
+    // Init
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Vérifier auth avec guard
+      const isAuthorized = await window.DIGIY.guardOrPay('FRET_PRO', '/digiy-fret-pro/pin.html');
+      
+      if (!isAuthorized) return;
+
+      // Récupérer session
+      session = window.DIGIY.checkLocalSession();
+      
+      if (!session) {
+        window.location.href = '/digiy-fret-pro/pin.html';
+        return;
+      }
+
+      // Init Supabase
+      supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // Charger données
+      await loadTransporteur();
+      await loadLivraisons();
+
+      // Refresh toutes les 30 secondes
+      setInterval(loadLivraisons, 30000);
+    });
+
+    async function loadTransporteur() {
+      try {
+        const { data, error } = await supa
+          .from('fret_transporteurs')
+          .select('*')
+          .eq('owner_id', session.ownerId)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          transporteurId = data.id;
+          document.getElementById('transporteurName').textContent = data.nom;
+          document.getElementById('statTotal').textContent = data.nb_livraisons || 0;
+        }
+      } catch (err) {
+        console.error('Erreur load transporteur:', err);
+      }
+    }
+
+    async function loadLivraisons() {
+      try {
+        // Charger toutes les livraisons
+        const { data, error } = await supa
+          .from('fret_livraisons')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Filtrer par statut
+        const pending = data.filter(l => l.statut === 'pending');
+        const accepted = data.filter(l => l.statut === 'accepted' && l.transporteur_id === transporteurId);
+        const inProgress = data.filter(l => l.statut === 'in_progress' && l.transporteur_id === transporteurId);
+        const delivered = data.filter(l => l.statut === 'delivered' && l.transporteur_id === transporteurId);
+
+        // Update counts
+        document.getElementById('countPending').textContent = pending.length;
+        document.getElementById('countAccepted').textContent = accepted.length;
+        document.getElementById('countInProgress').textContent = inProgress.length;
+        document.getElementById('countDelivered').textContent = delivered.length;
+
+        // Update stats
+        document.getElementById('statInProgress').textContent = inProgress.length;
+        
+        const todayDelivered = delivered.filter(l => {
+          const deliveredDate = new Date(l.delivered_at);
+          const today = new Date();
+          return deliveredDate.toDateString() === today.toDateString();
+        });
+        
+        document.getElementById('statToday').textContent = todayDelivered.length;
+        
+        const todayRevenue = todayDelivered.reduce((sum, l) => sum + (parseFloat(l.prix) || 0), 0);
+        document.getElementById('statRevenue').textContent = `${todayRevenue.toLocaleString()} FCFA`;
+
+        // Render lists
+        renderLivraisons('pendingContainer', pending, 'pending');
+        renderLivraisons('acceptedContainer', accepted, 'accepted');
+        renderLivraisons('inProgressContainer', inProgress, 'in_progress');
+        renderLivraisons('deliveredContainer', delivered, 'delivered');
+
+      } catch (err) {
+        console.error('Erreur load livraisons:', err);
+      }
+    }
+
+    function renderLivraisons(containerId, livraisons, statut) {
+      const container = document.getElementById(containerId);
+      
+      if (livraisons.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>Aucune livraison</h3>
+            <p>${getEmptyMessage(statut)}</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = livraisons.map(l => createLivraisonCard(l, statut)).join('');
+    }
+
+    function getEmptyMessage(statut) {
+      const messages = {
+        pending: 'Aucune demande disponible pour le moment',
+        accepted: 'Vous n\'avez pas encore accepté de livraisons',
+        in_progress: 'Aucune livraison en cours',
+        delivered: 'Aucune livraison complétée'
+      };
+      return messages[statut] || '';
+    }
+
+    function createLivraisonCard(l, statut) {
+      const badgeClass = l.statut.replace('_', '-');
+      const badgeText = {
+        pending: 'Disponible',
+        accepted: 'Acceptée',
+        in_progress: 'En cours',
+        delivered: 'Livrée',
+        cancelled: 'Annulée'
+      }[l.statut] || l.statut;
+
+      const whatsappLink = `https://wa.me/${l.client_whatsapp || l.client_tel.replace(/[^0-9]/g, '')}`;
+      const mapsLink = `https://www.google.com/maps/dir/${encodeURIComponent(l.adresse_depart)}/${encodeURIComponent(l.adresse_arrivee)}`;
+
+      let actions = '';
+      
+      if (statut === 'pending') {
+        actions = `
+          <button class="btn btn-accept" onclick="acceptLivraison('${l.id}')">✅ Accepter</button>
+          <button class="btn btn-refuse" onclick="refuseLivraison('${l.id}')">❌ Refuser</button>
+          <a href="${whatsappLink}" target="_blank" class="btn btn-whatsapp">💬 WhatsApp</a>
+          <a href="${mapsLink}" target="_blank" class="btn btn-maps">🗺️ Itinéraire</a>
+        `;
+      } else if (statut === 'accepted') {
+        actions = `
+          <button class="btn btn-delivered" onclick="startLivraison('${l.id}')">🚀 Démarrer</button>
+          <a href="${whatsappLink}" target="_blank" class="btn btn-whatsapp">💬 WhatsApp</a>
+          <a href="${mapsLink}" target="_blank" class="btn btn-maps">🗺️ Itinéraire</a>
+        `;
+      } else if (statut === 'in_progress') {
+        actions = `
+          <button class="btn btn-delivered" onclick="completeLivraison('${l.id}')">✅ Marquer livrée</button>
+          <a href="${whatsappLink}" target="_blank" class="btn btn-whatsapp">💬 WhatsApp</a>
+          <a href="${mapsLink}" target="_blank" class="btn btn-maps">🗺️ Itinéraire</a>
+        `;
+      } else if (statut === 'delivered') {
+        actions = `
+          <a href="${whatsappLink}" target="_blank" class="btn btn-whatsapp">💬 WhatsApp</a>
+          <a href="${mapsLink}" target="_blank" class="btn btn-maps">🗺️ Itinéraire</a>
+        `;
+      }
+
+      return `
+        <div class="livraison-card">
+          <div class="livraison-header">
+            <div class="livraison-numero">${l.numero}</div>
+            <div class="badge ${badgeClass}">${badgeText}</div>
+          </div>
+
+          <div class="livraison-route">
+            <span class="from">📍 ${l.ville_depart || l.adresse_depart}</span>
+            <span class="arrow">→</span>
+            <span class="to">🎯 ${l.ville_arrivee || l.adresse_arrivee}</span>
+          </div>
+
+          <div class="livraison-details">
+            <div class="detail-item">
+              📏 Distance: <strong>${l.distance_km} km</strong>
+            </div>
+            <div class="detail-item">
+              ⚖️ Poids: <strong>${l.poids_kg} kg</strong>
+            </div>
+            <div class="detail-item">
+              📦 Volume: <strong>${l.volume_m3} m³</strong>
+            </div>
+            <div class="detail-item">
+              🚛 Véhicule: <strong>${l.type_vehicule_requis || 'Non spécifié'}</strong>
+            </div>
+          </div>
+
+          ${l.description_colis ? `
+            <div class="detail-item" style="margin-bottom: 12px;">
+              📝 Description: <strong>${l.description_colis}</strong>
+            </div>
+          ` : ''}
+
+          <div class="livraison-client">
+            <div class="client-name">👤 ${l.client_nom}</div>
+            <div class="client-contact">📞 ${l.client_tel}</div>
+          </div>
+
+          <div class="livraison-price">💰 ${parseFloat(l.prix).toLocaleString()} FCFA</div>
+
+          <div class="livraison-actions">
+            ${actions}
+          </div>
         </div>
-        <div class="pill">
-          <span class="dot warn" id="dotDispo"></span>
-          <span id="dispoLabel">…</span>
-        </div>
-      </div>
-      <div class="bd" id="jobs"></div>
-      <div class="bd" style="padding-top:0">
-        <div class="notice" id="emptyNotice" style="display:none;">Aucune mission pour l’instant. Reste dispo, ça va tomber. 🔥</div>
-      </div>
-    </div>
+      `;
+    }
 
-    <div class="card">
-      <div class="hd">
-        <div>
-          <b>🧾 Tableau chauffeur</b><br>
-          <small class="muted" id="phoneLabel">📱 —</small>
-        </div>
-        <div class="pill">
-          <span class="dot warn" id="dotSession"></span>
-          <span id="sessionLabel">…</span>
-        </div>
-      </div>
-      <div class="bd">
-        <div class="kpi">
-          <div class="box"><b>Solde du jour</b><span id="kpiToday">—</span></div>
-          <div class="box"><b>Missions (7 jours)</b><span id="kpiWeek">—</span></div>
-          <div class="box"><b>Dernière sync</b><span id="kpiLast">—</span></div>
-          <div class="box"><b>Statut session</b><span id="kpiExp">—</span></div>
-        </div>
-        <div class="notice" id="log">Prêt. 🚀</div>
-      </div>
-    </div>
-  </div>
+    async function acceptLivraison(id) {
+      if (!confirm('Accepter cette livraison ?')) return;
 
-</div>
+      try {
+        const { error } = await supa
+          .from('fret_livraisons')
+          .update({
+            transporteur_id: transporteurId,
+            statut: 'accepted',
+            accepted_at: new Date().toISOString()
+          })
+          .eq('id', id);
 
-<script>
-/* 🔐 SUPABASE */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        if (error) throw error;
 
-/* HELPERS */
-const $ = (id)=>document.getElementById(id);
-const jobsEl = $("jobs");
-const emptyNotice = $("emptyNotice");
-const logEl = $("log");
+        alert('✅ Livraison acceptée !');
+        await loadLivraisons();
+      } catch (err) {
+        console.error('Erreur accept:', err);
+        alert('❌ Erreur lors de l\'acceptation');
+      }
+    }
 
-function log(msg){ logEl.textContent = msg; }
-function money(x){ return Number(x||0).toLocaleString("fr-FR") + " F CFA"; }
-function fmtDate(iso){
-  try{
-    const d = new Date(iso);
-    return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  }catch(e){ return "—"; }
-}
-function normalizePhoneDisplay(phone){
-  if(!phone) return "—";
-  let p = String(phone).trim().replace(/[^\d+]/g, "");
-  if (/^\d{11,15}$/.test(p) && !p.startsWith("+")) p = "+" + p;
-  if (/^0\d{8,}$/.test(p)) p = "+221" + p.replace(/^0+/, "");
-  return p;
-}
-function safeTxt(v){
-  return (v === undefined || v === null || String(v).trim() === "") ? "Non précisé" : String(v);
-}
+    async function refuseLivraison(id) {
+      // Juste refresh pour enlever de la liste
+      await loadLivraisons();
+    }
 
-/* ✅ RPC fields: pickup/dropoff (fallback table) */
-function pickFrom(j){
-  const p = safeTxt(j.pickup);
-  if(p !== "Non précisé") return p;
+    async function startLivraison(id) {
+      if (!confirm('Démarrer cette livraison ?')) return;
 
-  const z = safeTxt(j.from_zone);
-  if(z !== "Non précisé") return z;
+      try {
+        const { error } = await supa
+          .from('fret_livraisons')
+          .update({ statut: 'in_progress' })
+          .eq('id', id);
 
-  const c = safeTxt(j.pickup_city);
-  const a = safeTxt(j.pickup_area);
-  if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
-  if(a==="Non précisé") return c;
-  if(c==="Non précisé") return a;
-  return `${c} • ${a}`;
-}
-function pickTo(j){
-  const d = safeTxt(j.dropoff);
-  if(d !== "Non précisé") return d;
+        if (error) throw error;
 
-  const z = safeTxt(j.to_zone);
-  if(z !== "Non précisé") return z;
+        alert('🚀 Livraison démarrée !');
+        await loadLivraisons();
+      } catch (err) {
+        console.error('Erreur start:', err);
+        alert('❌ Erreur');
+      }
+    }
 
-  const c = safeTxt(j.drop_city);
-  const a = safeTxt(j.drop_area);
-  if(c==="Non précisé" && a==="Non précisé") return "Non précisé";
-  if(a==="Non précisé") return c;
-  if(c==="Non précisé") return a;
-  return `${c} • ${a}`;
-}
+    async function completeLivraison(id) {
+      if (!confirm('Marquer cette livraison comme livrée ?')) return;
 
-function setConn(ok,label){
-  const dot = $("dotConn");
-  dot.classList.remove("ok","bad","warn");
-  dot.classList.add(ok ? "ok":"bad");
-  $("connLabel").textContent = label;
-}
-function setSession(ok,label){
-  const dot = $("dotSession");
-  dot.classList.remove("ok","bad","warn");
-  dot.classList.add(ok ? "ok":"bad");
-  $("sessionLabel").textContent = label;
-}
-function setDispoUI(isOn){
-  const dot = $("dotDispo");
-  dot.classList.remove("ok","warn");
-  dot.classList.add(isOn ? "ok":"warn");
-  $("dispoLabel").textContent = isOn ? "DISPO ✅" : "PAUSE ⏸️";
-  $("btnToggleDispo").textContent = isOn ? "⚡ Dispo" : "⏸️ Pause";
-}
+      try {
+        const { error } = await supa
+          .from('fret_livraisons')
+          .update({
+            statut: 'delivered',
+            delivered_at: new Date().toISOString()
+          })
+          .eq('id', id);
 
-/* SESSION LOCAL (PIN) */
-const token = localStorage.getItem("digiy_fret_driver_token");
-const exp = localStorage.getItem("digiy_fret_driver_expires");
-const driverPhone = normalizePhoneDisplay(localStorage.getItem("digiy_fret_driver_phone"));
+        if (error) throw error;
 
-$("phoneLabel").textContent = "📱 " + (driverPhone || "—");
-$("subline").textContent = "📱 " + (driverPhone || "—") + " • 0% commission • terrain first";
+        // Incrémenter nb_livraisons
+        await supa
+          .from('fret_transporteurs')
+          .update({ nb_livraisons: supa.raw('nb_livraisons + 1') })
+          .eq('id', transporteurId);
 
-let dispo = true;
-setDispoUI(true);
+        alert('✅ Livraison complétée !');
+        await loadTransporteur();
+        await loadLivraisons();
+      } catch (err) {
+        console.error('Erreur complete:', err);
+        alert('❌ Erreur');
+      }
+    }
 
-(function sessionUI(){
-  if(!token || !exp){
-    setConn(false,"Non connecté");
-    setSession(false,"Session absente");
-    $("kpiExp").textContent = "—";
-    return;
-  }
-  const expDate = new Date(exp);
-  const ok = Date.now() < expDate.getTime();
-  setConn(ok, ok ? "Connecté" : "Expirée");
-  setSession(ok, ok ? "OK" : "EXPIRÉE");
-  $("kpiExp").textContent = ok ? ("Expire " + fmtDate(exp)) : ("Expirée " + fmtDate(exp));
-})();
+    function switchTab(tab) {
+      currentTab = tab;
 
-/* UI builders */
-function statusLabel(s){
-  const v = (s||"").toLowerCase();
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
 
-  if(v==="pending") return ["EN ATTENTE","#f1f5f9"];
-  if(v==="accepted") return ["ACCEPTÉE","#fff7ed"];
-  if(v==="started") return ["EN COURS","#fff7ed"];
-  if(v==="done") return ["LIVRÉE","#dcfce7"];
-  if(v==="refused") return ["REFUSÉE","#fff1f2"];
+      // Show/hide containers
+      document.querySelectorAll('.livraisons-container').forEach(c => c.classList.remove('active'));
+      document.getElementById(`${tab === 'pending' ? 'pending' : tab === 'accepted' ? 'accepted' : tab === 'in-progress' ? 'inProgress' : 'delivered'}Container`).classList.add('active');
+    }
 
-  // compat future
-  if(v==="new") return ["EN ATTENTE","#f1f5f9"];
-  if(v==="onroute") return ["EN COURS","#fff7ed"];
-  if(v==="delivered") return ["LIVRÉE","#dcfce7"];
-  if(v==="cancelled") return ["REFUSÉE","#fff1f2"];
-
-  return [String(s||"—").toUpperCase(),"#f1f5f9"];
-}
-
-function jobCard(j){
-  const [st,bg] = statusLabel(j.status);
-  const stv = String(j.status||"").toLowerCase();
-
-  return `
-    <div class="job" data-id="${j.id}">
-      <h3>🚚 Mission ${j.id}</h3>
-      <div class="chip" style="background:${bg}">🧾 ${st}</div>
-      <div class="chip">🕒 ${fmtDate(j.created_at)}</div>
-      <div class="chip">📍 ${pickFrom(j)} → ${pickTo(j)}</div>
-      <div class="chip">💰 ${money(j.price_xof)}</div>
-
-      <div>
-        ${(stv==="pending") ? `<button class="mini primary" data-act="accept">✅ Accepter</button>` : ``}
-        ${(stv==="accepted") ? `<button class="mini ok" data-act="start">🚦 Démarrer</button>` : ``}
-
-        <!-- ✅ PIN LIVRAISON (uniquement quand "started") -->
-        ${(stv==="started") ? `<button class="mini ok" data-act="pin">✅ Valider PIN</button>` : ``}
-
-        ${(stv!=="done") ? `<button class="mini bad" data-act="refuse">✖ Refuser</button>` : ``}
-      </div>
-    </div>
-  `;
-}
-
-function renderJobs(list){
-  jobsEl.innerHTML = "";
-  emptyNotice.style.display = list.length ? "none" : "block";
-  list.forEach(j=> jobsEl.insertAdjacentHTML("beforeend", jobCard(j)));
-}
-
-/* RPC — LIST */
-async function loadJobs(){
-  if(!token){
-    logout("Veuillez vous reconnecter");
-    return;
-  }
-  log("Chargement des missions…");
-  const { data, error } = await sb.rpc("rpc_fret_list_for_driver", { p_token: token });
-  if(error){
-    logout("Session invalide");
-    return;
-  }
-
-  const list = data || [];
-  renderJobs(list);
-
-  // KPIs
-  const start7 = Date.now() - 7*24*3600*1000;
-  const weekCount = list.filter(j => new Date(j.created_at).getTime() >= start7).length;
-  $("kpiWeek").textContent = String(weekCount);
-
-  const startDay = new Date(); startDay.setHours(0,0,0,0);
-  const sumToday = list
-    .filter(j => new Date(j.created_at).getTime() >= startDay.getTime() && (String(j.status).toLowerCase()==="done"))
-    .reduce((s,j)=> s + Number(j.price_xof||0), 0);
-  $("kpiToday").textContent = money(sumToday);
-
-  $("kpiLast").textContent = fmtDate(new Date().toISOString());
-  log("OK ✅");
-}
-
-/* RPC — ACTIONS */
-async function actAccept(id){
-  const { error } = await sb.rpc("rpc_fret_accept", { p_token: token, p_job_id: id });
-  if(error) return log("Erreur accept ❗");
-  log("Acceptée ✅");
-  loadJobs();
-}
-async function actStart(id){
-  const { error } = await sb.rpc("rpc_fret_start", { p_token: token, p_job_id: id });
-  if(error) return log("Erreur démarrage ❗");
-  log("Démarrée ✅");
-  loadJobs();
-}
-async function actRefuse(id){
-  const { error } = await sb.rpc("rpc_fret_refuse", { p_token: token, p_job_id: id });
-  if(error) return log("Erreur refus ❗");
-  log("Refusée ❌");
-  loadJobs();
-}
-
-/* ✅ PIN — CONFIRMATION LIVRAISON */
-async function actPin(id){
-  const pin = prompt("PIN livraison (4 chiffres) :");
-  if(pin === null) return; // annuler
-  const clean = String(pin).trim();
-
-  if(!/^\d{4}$/.test(clean)){
-    return log("PIN invalide (4 chiffres) ❗");
-  }
-
-  log("Vérification PIN…");
-
-  const { data, error } = await sb.rpc("rpc_fret_confirm_pin", {
-    p_token: token,
-    p_job_id: id,
-    p_pin: clean
-  });
-
-  if(error){
-    console.error("PIN_ERROR =", error);
-    return log("PIN incorrect ❌");
-  }
-
-  // si ton RPC renvoie {ok:true}
-  if(data && data.ok === true){
-    log("Livraison validée ✅");
-  }else{
-    log("OK ✅");
-  }
-  loadJobs();
-}
-
-/* EVENTS */
-$("btnRefresh").addEventListener("click", loadJobs);
-
-$("btnToggleDispo").addEventListener("click", ()=>{
-  dispo = !dispo;
-  setDispoUI(dispo);
-  log(dispo ? "Tu es DISPO ✅" : "Pause ⏸️");
-});
-
-$("btnLogout").addEventListener("click", ()=> logout("Déconnecté"));
-
-$("jobs").addEventListener("click", async (e)=>{
-  const btn = e.target.closest("button");
-  if(!btn) return;
-  const card = e.target.closest(".job");
-  const id = card?.dataset?.id;
-  const act = btn.dataset.act;
-  if(!id) return;
-
-  if(act==="accept") return actAccept(id);
-  if(act==="start") return actStart(id);
-  if(act==="pin") return actPin(id);
-  if(act==="refuse") return actRefuse(id);
-});
-
-/* START */
-loadJobs();
-</script>
+    function logout() {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('digiy_session');
+        window.location.href = '/digiy-fret-pro/pin.html';
+      }
+    }
+  </script>
 
 </body>
 </html>
